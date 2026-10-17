@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abulo — UI Mockups</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0A0A0B;color:#F2F2F7;font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+body{padding:44px 40px 80px}
+.board-head{display:flex;align-items:center;gap:16px;margin-bottom:22px}
+.logo{width:44px;height:44px;border-radius:13px;background:#FF7A00;color:#121212;font-size:24px;font-weight:700;display:grid;place-items:center}
+.board-head h1{font-size:24px;font-weight:600;letter-spacing:-.3px}
+.board-head p{font-size:13px;color:#8E8E93;margin-top:3px}
+.swatches{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:36px}
+.sw{width:104px}
+.sw .chip{height:40px;border-radius:10px;border:1px solid #2C2C2E}
+.sw .name{font-size:11px;color:#F2F2F7;margin-top:6px}
+.sw .hex{font-size:10px;color:#8E8E93}
+.grid{display:flex;flex-wrap:wrap;gap:56px 44px}
+.frame-wrap{display:flex;flex-direction:column;gap:14px}
+.frame-label{font-size:13px;color:#8E8E93}
+.frame-label .n{color:#FF7A00;font-weight:700;margin-right:6px}
+.phone{width:390px;height:844px;background:#121212;border:1px solid #2C2C2E;border-radius:40px;overflow:hidden;position:relative;flex:none;box-shadow:0 30px 70px rgba(0,0,0,.65)}
+.status{height:30px;padding:0 26px;display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600}
+.screen{height:750px;overflow:hidden;padding:0 16px}
+.nav{position:absolute;bottom:0;left:0;right:0;height:64px;background:#121212;border-top:1px solid #2C2C2E;display:grid;grid-template-columns:repeat(5,1fr)}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#8E8E93;font-size:11px;font-weight:500}
+.tab.active{color:#FF7A00}
+.ic,.ic20,.ic18,.ic14{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic{width:24px;height:24px}.ic20{width:20px;height:20px}.ic18{width:18px;height:18px}.ic14{width:14px;height:14px}
+.title{font-size:22px;font-weight:600}
+.sec{font-size:17px;font-weight:600}
+.muted{color:#8E8E93}.in{color:#22C55E}.warn{color:#FFB020}.danger{color:#FF453A}
+.row{display:flex;align-items:center;gap:12px}
+.card{background:#1C1C1E;border-radius:16px}
+.balance{background:#1C1C1E;border-radius:16px;padding:14px;height:120px;display:flex;flex-direction:column;justify-content:space-between}
+.balance .amt{font-size:34px;font-weight:600;letter-spacing:-.6px}
+.btn{height:36px;padding:0 16px;border-radius:18px;font-size:15px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:7px;color:#F2F2F7;background:#2C2C2E}
+.btn.a{background:#FF7A00;color:#121212}
+.btn-main{height:52px;border-radius:14px;background:#FF7A00;color:#121212;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;width:100%;gap:8px}
+.chip{height:34px;padding:0 14px;border-radius:17px;background:#2C2C2E;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px;flex:none}
+.chip.sel{background:#FF7A00;color:#121212;font-weight:600}
+.badge{height:22px;padding:0 10px;border-radius:11px;background:#2C2C2E;font-size:11px;font-weight:500;display:inline-flex;align-items:center;gap:5px}
+.icon-circ{width:44px;height:44px;border-radius:50%;background:#FF7A00;color:#121212;display:grid;place-items:center;flex:none}
+.icon-sq{width:44px;height:44px;border-radius:12px;background:#2C2C2E;color:#F2F2F7;display:grid;place-items:center;flex:none;font-size:14px;font-weight:700}
+.icon-40{width:40px;height:40px;border-radius:12px;background:#2C2C2E;display:grid;place-items:center;flex:none}
+.tile{width:171px;height:88px;border-radius:16px;background:#1C1C1E;padding:14px;display:flex;flex-direction:column;justify-content:space-between}
+.tile .t{font-size:15px;font-weight:600}
+.arrow{color:#8E8E93;margin-left:auto}
+.arow{height:56px;display:flex;align-items:center;gap:12px}
+.arow .t{font-size:15px}
+.arow .s{font-size:12px;color:#8E8E93;margin-top:3px}
+.amount{font-size:15px;font-weight:600;text-align:right}
+.bal{font-size:11px;color:#8E8E93;text-align:right;margin-top:3px}
+.crow{height:58px;display:flex;align-items:center;gap:12px}
+.flag{width:40px;height:40px;border-radius:12px;background:#2C2C2E;display:grid;place-items:center;font-size:12px;font-weight:700;letter-spacing:.5px}
+.input{height:52px;border-radius:12px;background:#1C1C1E;border:1px solid #2C2C2E;display:flex;align-items:center;padding:0 14px;font-size:15px;gap:10px}
+.search{height:48px;border-radius:24px;background:#1C1C1E;border:1px solid #2C2C2E;display:flex;align-items:center;padding:0 16px;font-size:15px;gap:10px;color:#8E8E93}
+.bell{position:relative;display:grid;place-items:center}
+.dot{position:absolute;top:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:#FF7A00;border:2px solid #121212}
+.spin{width:20px;height:20px;border-radius:50%;border:2.5px solid #3A3A3C;border-top-color:#FF7A00;animation:sp 1s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.mono{font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;font-size:32px;font-weight:600;letter-spacing:4px}
+.code-card{background:#1C1C1E;border-radius:16px;padding:12px 14px;min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #2C2C2E}
+.dashed{border:1.5px dashed #3A3A3C;border-radius:16px;height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#8E8E93;font-size:13px;text-align:center}
+.divider{height:1px;background:#2C2C2E;margin:14px 0}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:5}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:6;background:#1C1C1E;border-radius:24px 24px 0 0;padding:10px 20px 26px}
+.grab{width:36px;height:4px;border-radius:2px;background:#3A3A3C;margin:0 auto 14px}
+.srow{display:flex;justify-content:space-between;font-size:15px;padding:7px 0}
+.srow .k{color:#8E8E93}
+.toast{position:absolute;left:50%;transform:translateX(-50%);bottom:80px;height:44px;padding:0 18px;border-radius:22px;background:#2C2C2E;font-size:14px;display:flex;align-items:center;gap:8px;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.stat{flex:1;text-align:center}
+.stat .v{font-size:17px;font-weight:600}
+.stat .k{font-size:12px;color:#8E8E93;margin-top:2px}
+.gtile{width:171px;height:96px;border-radius:16px;background:#1C1C1E;border:1.5px solid transparent;padding:14px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+.gtile.on{border-color:#FF7A00}
+.gtile .gname{font-size:15px;font-weight:600}
+.gtile .gsub{font-size:12px;color:#8E8E93;margin-top:2px}
+.tick{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:#FF7A00;color:#121212;display:grid;place-items:center}
+.note{background:#2C2C2E;border-radius:14px;padding:10px 14px;display:flex;gap:10px;align-items:center;font-size:12px;color:#C7C7CC;line-height:1.45}
+.link{color:#FF7A00;font-size:13px;font-weight:600;margin-left:auto}
+.foot{max-width:900px;margin-top:56px;font-size:13px;color:#8E8E93;line-height:1.7}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11.2 12 4.5l8 6.7"/><path d="M6.2 9.9V19.5h11.6V9.9"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="7.2" y="2.8" width="9.6" height="18.4" rx="2.6"/><path d="M10.6 18.5h2.8"/></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M6.2 8.2h11.6l1 12.2H5.2z"/><path d="M9.2 8.2V6.1a2.8 2.8 0 0 1 5.6 0v2.1"/></symbol>
+<symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M10 8v8M14 8v8M8.6 10.6h6.8M8.6 13.4h6.8"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3.4" y="6.6" width="17.2" height="12" rx="3"/><circle cx="16.8" cy="12.6" r="1.1"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M6.4 15.6v-5a5.6 5.6 0 0 1 11.2 0v5l1.6 2.6H4.8z"/><path d="M10.2 20.4a2 2 0 0 0 3.6 0"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4.5v10"/><path d="M7.8 10.6l4.2 4.2 4.2-4.2"/><path d="M4.5 19.5h15"/></symbol>
+<symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19.5v-10"/><path d="M7.8 13.4l4.2-4.2 4.2 4.2"/><path d="M4.5 4.5h15"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.4"/><path d="M15.8 15.8l4.4 4.4"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9.2 5.8 15.4 12l-6.2 6.2"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="10.6" height="10.6" rx="2.2"/><path d="M6.2 14.8H4.6V4.4h10.4v1.4"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M8.4 12.3l2.5 2.5 4.7-5.2"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.6v4.6l3 1.8"/></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="3.8" y="8.2" width="16.4" height="12.6" rx="2"/><path d="M3.8 12.4h16.4M12 8.2v12.6"/><path d="M9.4 8.2c-1.8-.2-2.8-1-2.6-2.1.2-1 1.4-1.4 2.3-.7.8.6 2.9 2.8 2.9 2.8z"/><path d="M14.6 8.2c1.8-.2 2.8-1 2.6-2.1-.2-1-1.4-1.4-2.3-.7-.8.6-2.9 2.8-2.9 2.8z"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.8l7 2.6v5.2c0 4.4-2.9 7.4-7 8.6-4.1-1.2-7-4.2-7-8.6V6.4z"/><path d="M9 12l2.2 2.2 4-4.6"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.2" r="3.6"/><path d="M5.4 19.4c.8-3.2 3.4-5 6.6-5s5.8 1.8 6.6 5"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15.5v-9"/><path d="M8 10l4-4 4 4"/><path d="M4.5 19.5h15"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8.5h3l1.6-2.5h6.8L17 8.5h3v10H4z"/><circle cx="12" cy="13" r="3.4"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5.6" y="10.6" width="12.8" height="9" rx="2.4"/><path d="M8.6 10.6V8.4a3.4 3.4 0 0 1 6.8 0v2.2"/></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.8v5"/><path d="M12 16.1h.01"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M9.4 9.4l5.2 5.2M14.6 9.4l-5.2 5.2"/></symbol>
+</svg>
+
+<header class="board-head">
+  <div class="logo">A</div>
+  <div>
+    <h1>Abulo — screen mockups</h1>
+    <p>390 × 844 dp reference · dark mode only · one accent · Android first · spec v1 · figures are sample data</p>
+  </div>
+</header>
+
+<div class="swatches">
+  <div class="sw"><div class="chip" style="background:#121212"></div><div class="name">Background</div><div class="hex">#121212</div></div>
+  <div class="sw"><div class="chip" style="background:#1C1C1E"></div><div class="name">Surface</div><div class="hex">#1C1C1E</div></div>
+  <div class="sw"><div class="chip" style="background:#2C2C2E"></div><div class="name">Raised</div><div class="hex">#2C2C2E</div></div>
+  <div class="sw"><div class="chip" style="background:#3A3A3C"></div><div class="name">Pressed</div><div class="hex">#3A3A3C</div></div>
+  <div class="sw"><div class="chip" style="background:#FF7A00"></div><div class="name">Accent</div><div class="hex">#FF7A00</div></div>
+  <div class="sw"><div class="chip" style="background:#F2F2F7"></div><div class="name">Primary text</div><div class="hex">#F2F2F7</div></div>
+  <div class="sw"><div class="chip" style="background:#8E8E93"></div><div class="name">Secondary</div><div class="hex">#8E8E93</div></div>
+  <div class="sw"><div class="chip" style="background:#22C55E"></div><div class="name">Money in</div><div class="hex">#22C55E</div></div>
+  <div class="sw"><div class="chip" style="background:#FFB020"></div><div class="name">Warning</div><div class="hex">#FFB020</div></div>
+  <div class="sw"><div class="chip" style="background:#FF453A"></div><div class="name">Danger</div><div class="hex">#FF453A</div></div>
+</div>
+
+<main class="grid">
+<div class="frame-wrap">
+  <div class="frame-label"><span class="n">01</span>Home — balance card, four shortcut tiles, recent activity</div>
+  <div class="phone">
+    <div class="status"><span>9:41</span><svg width="46" height="12" viewBox="0 0 46 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/><path d="M23.5 5.2a8.6 8.6 0 0 1 11 0l-1.7 1.9a6 6 0 0 0-7.6 0z"/><circle cx="29" cy="9.6" r="1.5"/><rect x="36" y="3" width="8.5" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="37.4" y="4.4" width="4.6" height="3.2" rx="1"/><rect x="45" y="5" width="1" height="2" rx="0.5"/></svg></div>
+    <div class="screen">
+      <div style="height:56px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div class="muted" style="font-size:12px">Good evening</div>
+          <div style="font-size:17px;font-weight:600">Chidi</div>
+        </div>
+        <div class="bell"><svg class="ic"><use href="#i-bell"/></svg><span class="dot"></span></div>
+      </div>
+      <div class="balance">
+        <div>
+          <div class="muted" style="font-size:12px">Wallet balance</div>
+          <div class="amt">₦78,390</div>
+        </div>
+        <div class="row" style="gap:10px">
+          <div class="btn a" style="flex:1"><svg class="ic18"><use href="#i-down"/></svg>Deposit</div>
+          <div class="btn" style="flex:1"><svg class="ic18"><use href="#i-up"/></svg>Withdraw</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div class="tile"><div class="icon-circ"><svg class="ic" style="width:26px;height:26px"><use href="#i-phone"/></svg></div><div class="t">Buy number</div></div>
+        <div class="tile"><div class="icon-circ"><svg class="ic" style="width:26px;height:26px"><use href="#i-user"/></svg></div><div class="t">Buy account</div></div>
+        <div class="tile"><div class="icon-circ"><svg class="ic" style="width:26px;height:26px"><use href="#i-gift"/></svg></div><div class="t">Redeem gift card</div></div>
+        <div class="tile"><div class="icon-circ"><svg class="ic" style="width:26px;height:26px"><use href="#i-coin"/></svg></div><div class="t">Do tasks</div></div>
+      </div>
+      <div class="row" style="margin-top:18px;height:24px">
+        <div class="sec">Recent activity</div>
+        <div class="link">See all</div>
+      </div>
+      <div class="arow">
+        <div class="icon-40 in"><svg class="ic20"><use href="#i-down"/></svg></div>
+        <div style="flex:1"><div class="t">Wallet deposit</div><div class="s">Today · 4:12 PM</div></div>
+        <div class="amount in">+₦5,000</div>
+      </div>
+      <div class="arow">
+        <div class="icon-40"><svg class="ic20"><use href="#i-phone"/></svg></div>
+        <div style="flex:1"><div class="t">US number — WhatsApp</div><div class="s">Today · 11:03 AM</div></div>
+        <div class="amount">−₦1,190</div>
+      </div>
+      <div class="arow">
+        <div class="icon-40 in"><svg class="ic20"><use href="#i-gift"/></svg></div>
+        <div style="flex:1"><div class="t">Gift card — Amazon $50</div><div class="s">13 Oct</div></div>
+        <div class="amount in">+₦72,500</div>
+      </div>
+      <div class="arow">
+        <div class="icon-40 in"><svg class="ic20"><use href="#i-coin"/></svg></div>
+        <div style="flex:1"><div class="t">Task reward — Follow page</div><div class="s">13 Oct</div></div>
+        <div class="amount in">+₦80</div>
+      </div>
+      <div class="arow">
+        <div class="icon-40"><svg class="ic20"><use href="#i-up"/></svg></div>
+        <div style="flex:1"><div class="t">Withdrawal — GTBank</div><div class="s">11 Oct</div></div>
+        <div class="amount">−₦18,000</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab active"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+      <div class="tab"><svg class="ic"><use href="#i-phone"/></svg>Numbers</div>
+      <div class="tab"><svg class="ic"><use href="#i-bag"/></svg>Market</div>
+      <div class="tab"><svg class="ic"><use href="#i-coin"/></svg>Earn</div>
+      <div class="tab"><svg class="ic"><use href="#i-wallet"/></svg>Wallet</div>
+    </div>
+  </div>
+</div>
+
+<div class="frame-wrap">
+  <div class="frame-label"><span class="n">02</span>Numbers — search, country list, My numbers</div>
+  <div class="phone">
+    <div class="status"><span>9:41</span><svg width="46" height="12" viewBox="0 0 46 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/><path d="M23.5 5.2a8.6 8.6 0 0 1 11 0l-1.7 1.9a6 6 0 0 0-7.6 0z"/><circle cx="29" cy="9.6" r="1.5"/><rect x="36" y="3" width="8.5" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="37.4" y="4.4" width="4.6" height="3.2" rx="1"/><rect x="45" y="5" width="1" height="2" rx="0.5"/></svg></div>
+    <div class="screen">
+      <div style="height:56px;display:flex;align-items:center"><div class="title">Numbers</div></div>
+      <div class="search"><svg class="ic20"><use href="#i-search"/></svg>Search country or service</div>
+      <div style="margin-top:8px">
+        <div class="crow"><div class="flag">US</div><div style="flex:1"><div style="font-size:15px;font-weight:500">United States</div><div class="muted" style="font-size:12px">WhatsApp · Telegram · Google</div></div><div class="muted" style="font-size:13px">from ₦850</div><svg class="ic20 muted"><use href="#i-chev"/></svg></div>
+        <div class="crow"><div class="flag">UK</div><div style="flex:1"><div style="font-size:15px;font-weight:500">United Kingdom</div><div class="muted" style="font-size:12px">WhatsApp · Telegram · TikTok</div></div><div class="muted" style="font-size:13px">from ₦1,100</div><svg class="ic20 muted"><use href="#i-chev"/></svg></div>
+        <div class="crow"><div class="flag">CA</div><div style="flex:1"><div style="font-size:15px;font-weight:500">Canada</div><div class="muted" style="font-size:12px">WhatsApp · Instagram · Google</div></div><div class="muted" style="font-size:13px">from ₦1,050</div><svg class="ic20 muted"><use href="#i-chev"/></svg></div>
+        <div class="crow"><div class="flag">KE</div><div style="flex:1"><div style="font-size:15px;font-weight:500">Kenya</div><div class="muted" style="font-size:12px">WhatsApp · Telegram</div></div><div class="muted" style="font-size:13px">from ₦700</div><svg class="ic20 muted"><use href="#i-chev"/></svg></div>
+        <div class="crow"><div class="flag">DE</div><div style="flex:1"><div style="font-size:15px;font-weight:500">Germany</div><div class="muted" style="font-size:12px">WhatsApp · Google · TikTok</div></div><div class="muted" style="font-size:13px">from ₦1,350</div><svg class="ic20 muted"><use href="#i-chev"/></svg></div>
+      </div>
+      <div class="row" style="margin-top:16px;height:24px">
+        <div class="sec">My numbers</div>
+        <div class="link">See all</div>
+      </div>
+      <div class="arow">
+        <div class="icon-40 warn"><span class="spin"></span></div>
+        <div style="flex:1"><div class="t">US · WhatsApp</div><div class="s">Waiting for the code</div></div>
+        <div class="warn" style="font-size:13px;font-weight:600">18:42 left</div>
+      </div>
+      <div class="arow">
+        <div class="icon-40 in"><svg class="ic20"><use href="#i-check"/></svg></div>
+        <div style="flex:1"><div class="t">US · Telegram</div><div class="s">Code received · 4:03 PM</div></div>
+        <div class="mono" style="font-size:15px;letter-spacing:1px">112-804</div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+      <div class="tab active"><svg class="ic"><use href="#i-phone"/></svg>Numbers</div>
+      <div class="tab"><svg class="ic"><use href="#i-bag"/></svg>Market</div>
+      <div class="tab"><svg class="ic"><use href="#i-coin"/></svg>Earn</div>
+      <div class="tab"><svg class="ic"><use href="#i-wallet"/></svg>Wallet</div>
+    </div>
+  </div>
+</div>
+<div class="frame-wrap">
+  <div class="frame-label"><span class="n">03</span>Market — category chips, listing cards, escrow notice</div>
+  <div class="phone">
+    <div class="status"><span>9:41</span><svg width="46" height="12" viewBox="0 0 46 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/><path d="M23.5 5.2a8.6 8.6 0 0 1 11 0l-1.7 1.9a6 6 0 0 0-7.6 0z"/><circle cx="29" cy="9.6" r="1.5"/><rect x="36" y="3" width="8.5" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="37.4" y="4.4" width="4.6" height="3.2" rx="1"/><rect x="45" y="5" width="1" height="2" rx="0.5"/></svg></div>
+    <div class="screen">
+      <div style="height:56px;display:flex;align-items:center;justify-content:space-between">
+        <div class="title">Market</div>
+        <div class="chip" style="height:34px"><svg class="ic18"><use href="#i-bag"/></svg>Sell</div>
+      </div>
+      <div style="display:flex;gap:8px;overflow:hidden">
+        <div class="chip sel">All</div>
+        <div class="chip">Facebook</div>
+        <div class="chip">Instagram</div>
+        <div class="chip">TikTok</div>
+        <div class="chip">Call of Duty</div>
+      </div>
+      <div class="note" style="margin-top:12px"><svg class="ic20 in" style="color:#FF7A00"><use href="#i-shield"/></svg><span>Protected by escrow — your money is held until you confirm the account works.</span></div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+        <div class="card" style="padding:14px">
+          <div class="row" style="align-items:flex-start">
+            <div class="icon-sq">FB</div>
+            <div style="flex:1">
+              <div style="font-size:15px;font-weight:600">Facebook — aged 2019</div>
+              <div class="muted" style="font-size:12px;line-height:1.5;margin-top:3px">2.3k friends · Email included<br>United States</div>
+              <div class="row" style="margin-top:10px;justify-content:space-between">
+                <div style="font-size:17px;font-weight:600">₦8,500</div>
+                <div class="badge" style="background:rgba(34,197,94,.14);color:#22C55E"><svg class="ic14"><use href="#i-check"/></svg>Verified seller</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div class="row" style="align-items:flex-start">
+            <div class="icon-sq">IG</div>
+            <div style="flex:1">
+              <div style="font-size:15px;font-weight:600">Instagram — creator, 5.2k</div>
+              <div class="muted" style="font-size:12px;line-height:1.5;margin-top:3px">5.2k followers · Aged 2021<br>Nigeria</div>
+              <div class="row" style="margin-top:10px;justify-content:space-between">
+                <div style="font-size:17px;font-weight:600">₦12,000</div>
+                <div class="badge" style="background:rgba(34,197,94,.14);color:#22C55E"><svg class="ic14"><use href="#i-check"/></svg>Verified seller</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="padding:14px">
+          <div class="row" style="align-items:flex-start">
+            <div class="icon-sq">COD</div>
+            <div style="flex:1">
+              <div style="font-size:15px;font-weight:600">Call of Duty — level 120</div>
+              <div class="muted" style="font-size:12px;line-height:1.5;margin-top:3px">14 legendary skins · Activision linked<br>Global</div>
+              <div class="row" style="margin-top:10px;justify-content:space-between">
+                <div style="font-size:17px;font-weight:600">₦45,000</div>
+                <div class="badge" style="background:rgba(34,197,94,.14);color:#22C55E"><svg class="ic14"><use href="#i-check"/></svg>Top seller</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+      <div class="tab"><svg class="ic"><use href="#i-phone"/></svg>Numbers</div>
+      <div class="tab active"><svg class="ic"><use href="#i-bag"/></svg>Market</div>
+      <div class="tab"><svg class="ic"><use href="#i-coin"/></svg>Earn</div>
+      <div class="tab"><svg class="ic"><use href="#i-wallet"/></svg>Wallet</div>
+    </div>
+  </div>
+</div>
+
+<div class="frame-wrap">
+  <div class="frame-label"><span class="n">04</span>Earn — tasks, gift cards, earnings summary</div>
+  <div class="phone">
+    <div class="status"><span>9:41</span><svg width="46" height="12" viewBox="0 0 46 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/><path d="M23.5 5.2a8.6 8.6 0 0 1 11 0l-1.7 1.9a6 6 0 0 0-7.6 0z"/><circle cx="29" cy="9.6" r="1.5"/><rect x="36" y="3" width="8.5" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="37.4" y="4.4" width="4.6" height="3.2" rx="1"/><rect x="45" y="5" width="1" height="2" rx="0.5"/></svg></div>
+    <div class="screen">
+      <div style="height:56px;display:flex;align-items:center"><div class="title">Earn</div></div>
+      <div class="card" style="padding:14px;display:flex;align-items:center;gap:12px">
+        <div class="icon-circ"><svg class="ic" style="width:26px;height:26px"><use href="#i-coin"/></svg></div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:600">Tasks</div><div class="muted" style="font-size:12px;margin-top:2px">Small jobs, paid per task</div></div>
+        <div class="badge" style="margin-right:4px">12 live</div>
+        <svg class="ic20 muted"><use href="#i-chev"/></svg>
+      </div>
+      <div class="card" style="padding:14px;display:flex;align-items:center;gap:12px;margin-top:12px">
+        <div class="icon-circ"><svg class="ic" style="width:26px;height:26px"><use href="#i-gift"/></svg></div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:600">Gift cards</div><div class="muted" style="font-size:12px;margin-top:2px">Redeem at top rates, paid in minutes</div></div>
+        <div class="badge" style="margin-right:4px">Up to ₦1,450/$</div>
+        <svg class="ic20 muted"><use href="#i-chev"/></svg>
+      </div>
+      <div class="row" style="margin-top:18px;height:24px">
+        <div class="sec">My earnings</div>
+        <div class="link">Details</div>
+      </div>
+      <div class="card" style="padding:16px 8px;display:flex;margin-top:10px;align-items:center">
+        <div class="stat"><div class="v warn">₦850</div><div class="k">Pending</div></div>
+        <div class="stat"><div class="v in">₦4,280</div><div class="k">Approved</div></div>
+        <div class="stat"><div class="v muted">₦0</div><div class="k">Rejected</div></div>
+      </div>
+      <div class="sec" style="margin-top:18px">Recent submissions</div>
+      <div class="arow" style="margin-top:6px">
+        <div class="icon-40">IG</div>
+        <div style="flex:1"><div class="t">Follow @abulo.store on Instagram</div><div class="s">Under review · submitted 2 h ago</div></div>
+        <div><div class="amount warn">₦80</div><div class="bal">Pending</div></div>
+      </div>
+      <div class="arow">
+        <div class="icon-40">JM</div>
+        <div style="flex:1"><div class="t">Install and open Jumia app</div><div class="s">Approved · 13 Oct</div></div>
+        <div><div class="amount in">+₦250</div><div class="bal">Paid to wallet</div></div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+      <div class="tab"><svg class="ic"><use href="#i-phone"/></svg>Numbers</div>
+      <div class="tab"><svg class="ic"><use href="#i-bag"/></svg>Market</div>
+      <div class="tab active"><svg class="ic"><use href="#i-coin"/></svg>Earn</div>
+      <div class="tab"><svg class="ic"><use href="#i-wallet"/></svg>Wallet</div>
+    </div>
+  </div>
+</div>
+<div class="frame-wrap">
+  <div class="frame-label"><span class="n">05</span>Wallet — balance, deposit and withdraw, full history with balance after</div>
+  <div class="phone">
+    <div class="status"><span>9:41</span><svg width="46" height="12" viewBox="0 0 46 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/><path d="M23.5 5.2a8.6 8.6 0 0 1 11 0l-1.7 1.9a6 6 0 0 0-7.6 0z"/><circle cx="29" cy="9.6" r="1.5"/><rect x="36" y="3" width="8.5" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="37.4" y="4.4" width="4.6" height="3.2" rx="1"/><rect x="45" y="5" width="1" height="2" rx="0.5"/></svg></div>
+    <div class="screen">
+      <div style="height:56px;display:flex;align-items:center"><div class="title">Wallet</div></div>
+      <div class="balance">
+        <div>
+          <div class="muted" style="font-size:12px">Wallet balance</div>
+          <div class="amt">₦78,390</div>
+        </div>
+        <div class="row" style="gap:10px">
+          <div class="btn a" style="flex:1"><svg class="ic18"><use href="#i-down"/></svg>Deposit</div>
+          <div class="btn" style="flex:1"><svg class="ic18"><use href="#i-up"/></svg>Withdraw</div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:18px;height:24px">
+        <div class="sec">History</div>
+        <div class="link">See all</div>
+      </div>
+      <div class="arow">
+        <div class="icon-40 in"><svg class="ic20"><use href="#i-down"/></svg></div>
+        <div style="flex:1"><div class="t">Deposit — Paystack</div><div class="s">Today · 4:12 PM</div></div>
+        <div><div class="amount in">+₦5,000</div><div class="bal">Bal ₦78,390</div></div>
+      </div>
+      <div class="arow">
+        <div class="icon-40 in"><svg class="ic20"><use href="#i-coin"/></svg></div>
+        <div style="flex:1"><div class="t">Task reward</div><div class="s">Today · 11:03 AM</div></div>
+        <div><div class="amount in">+₦80</div><div class="bal">Bal ₦73,390</div></div>
+      </div>
+      <div class="arow">
+        <div class="icon-40"><svg class="ic20"><use href="#i-phone"/></svg></div>
+        <div style="flex:1"><div class="t">US number — WhatsApp</div><div class="s">Yesterday</div></div>
+        <div><div class="amount">−₦1,190</div><div class="bal">Bal ₦73,310</div></div>
+      </div>
+      <div class="arow">
+        <div class="icon-40 in"><svg class="ic20"><use href="#i-gift"/></svg></div>
+        <div style="flex:1"><div class="t">Gift card payout — Amazon</div><div class="s">13 Oct</div></div>
+        <div><div class="amount in">+₦72,500</div><div class="bal">Bal ₦74,500</div></div>
+      </div>
+      <div class="arow">
+        <div class="icon-40"><svg class="ic20"><use href="#i-up"/></svg></div>
+        <div style="flex:1"><div class="t">Withdrawal — GTBank</div><div class="s">11 Oct</div></div>
+        <div><div class="amount">−₦18,000</div><div class="bal">Bal ₦2,000</div></div>
+      </div>
+      <div class="sec" style="margin-top:16px">Settings</div>
+      <div class="arow" style="margin-top:6px">
+        <div class="icon-40"><svg class="ic20"><use href="#i-lock"/></svg></div>
+        <div style="flex:1"><div class="t">PIN &amp; security</div></div>
+        <svg class="ic20 muted"><use href="#i-chev"/></svg>
+      </div>
+      <div class="arow">
+        <div class="icon-40"><svg class="ic20"><use href="#i-wallet"/></svg></div>
+        <div style="flex:1"><div class="t">Bank accounts</div></div>
+        <svg class="ic20 muted"><use href="#i-chev"/></svg>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="tab"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+      <div class="tab"><svg class="ic"><use href="#i-phone"/></svg>Numbers</div>
+      <div class="tab"><svg class="ic"><use href="#i-bag"/></svg>Market</div>
+      <div class="tab"><svg class="ic"><use href="#i-coin"/></svg>Earn</div>
+      <div class="tab active"><svg class="ic"><use href="#i-wallet"/></svg>Wallet</div>
+    </div>
+  </div>
+</div>
+
+<div class="frame-wrap">
+  <div class="frame-label"><span class="n">06</span>Buy number — confirm sheet over the country list</div>
+  <div class="phone">
+    <div class="status"><span>9:41</span><svg width="46" height="12" viewBox="0 0 46 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/><path d="M23.5 5.2a8.6 8.6 0 0 1 11 0l-1.7 1.9a6 6 0 0 0-7.6 0z"/><circle cx="29" cy="9.6" r="1.5"/><rect x="36" y="3" width="8.5" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="37.4" y="4.4" width="4.6" height="3.2" rx="1"/><rect x="45" y="5" width="1" height="2" rx="0.5"/></svg></div>
+    <div class="screen">
+      <div style="height:56px;display:flex;align-items:center"><div class="title">Numbers</div></div>
+      <div class="search"><svg class="ic20"><use href="#i-search"/></svg>Search country or service</div>
+      <div style="margin-top:8px">
+        <div class="crow"><div class="flag">US</div><div style="flex:1"><div style="font-size:15px;font-weight:500">United States</div><div class="muted" style="font-size:12px">WhatsApp · Telegram · Google</div></div><div class="muted" style="font-size:13px">from ₦850</div><svg class="ic20 muted"><use href="#i-chev"/></svg></div>
+        <div class="crow"><div class="flag">UK</div><div style="flex:1"><div style="font-size:15px;font-weight:500">United Kingdom</div><div class="muted" style="font-size:12px">WhatsApp · Telegram · TikTok</div></div><div class="muted" style="font-size:13px">from ₦1,100</div><svg class="ic20 muted"><use href="#i-chev"/></svg></div>
+        <div class="crow"><div class="flag">CA</div><div style="flex:1"><div style="font-size:15px;font-weight:500">Canada</div><div class="muted" style="font-size:12px">WhatsApp · Instagram · Google</div></div><div class="muted" style="font-size:13px">from ₦1,050</div><svg class="ic20 muted"><use href="#i-chev"/></svg></div>
+      </div>
+    </div>
+    <div class="dim"></div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="sec" style="margin-bottom:6px">Confirm purchase</div>
+      <div class="srow"><span class="k">Service</span><span>WhatsApp</span></div>
+      <div class="srow"><span class="k">Country</span><span>United States</span></div>
+      <div class="srow"><span class="k">Type</span><span>Virtual number</span></div>
+      <div class="srow"><span class="k">Active for</span><span>20 minutes</span></div>
+      <div class="divider"></div>
+      <div class="srow" style="font-weight:600;font-size:17px"><span>Price</span><span>₦1,190</span></div>
+      <div class="muted" style="font-size:12px;line-height:1.5;margin:4px 0 14px">From wallet balance ₦78,390 · Cancel allowed after 2 minutes · Full refund if no code arrives.</div>
+      <div class="btn-main">Buy for ₦1,190</div>
+    </div>
+    <div class="nav">
+      <div class="tab"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+      <div class="tab active"><svg class="ic"><use href="#i-phone"/></svg>Numbers</div>
+      <div class="tab"><svg class="ic"><use href="#i-bag"/></svg>Market</div>
+      <div class="tab"><svg class="ic"><use href="#i-coin"/></svg>Earn</div>
+      <div class="tab"><svg class="ic"><use href="#i-wallet"/></svg>Wallet</div>
+    </div>
+  </div>
+</div>
+<div class="frame-wrap">
+  <div class="frame-label"><span class="n">07</span>Number detail — waiting, code arrived, earlier code, copy toast</div>
+  <div class="phone">
+    <div class="status"><span>9:41</span><svg width="46" height="12" viewBox="0 0 46 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/><path d="M23.5 5.2a8.6 8.6 0 0 1 11 0l-1.7 1.9a6 6 0 0 0-7.6 0z"/><circle cx="29" cy="9.6" r="1.5"/><rect x="36" y="3" width="8.5" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="37.4" y="4.4" width="4.6" height="3.2" rx="1"/><rect x="45" y="5" width="1" height="2" rx="0.5"/></svg></div>
+    <div class="screen">
+      <div style="height:56px;display:flex;align-items:center;gap:12px">
+        <svg class="ic" style="transform:rotate(180deg)"><use href="#i-chev"/></svg>
+        <div class="sec">US · WhatsApp</div>
+        <div class="badge" style="margin-left:auto;background:rgba(255,176,32,.14);color:#FFB020">Waiting</div>
+      </div>
+      <div class="card" style="padding:14px;display:flex;align-items:center;justify-content:space-between">
+        <div><div class="muted" style="font-size:12px">Your number</div><div style="font-size:17px;font-weight:600;margin-top:3px">+1 (240) 555-0182</div></div>
+        <div class="btn"><svg class="ic18"><use href="#i-copy"/></svg>Copy</div>
+      </div>
+      <div class="card" style="padding:14px;margin-top:12px">
+        <div class="row"><span class="spin"></span><div style="flex:1"><div style="font-size:15px;font-weight:600">Waiting for the code</div><div class="muted" style="font-size:12px;margin-top:3px">12:31 left · refunded automatically if it doesn't arrive</div></div></div>
+        <div class="divider" style="margin:12px 0"></div>
+        <div class="row" style="justify-content:space-between"><div class="muted" style="font-size:12px">Cancel allowed 2 minutes after buying</div><div class="btn" style="color:#FF453A">Cancel</div></div>
+      </div>
+      <div class="code-card" style="margin-top:12px;border-color:rgba(34,197,94,.35)">
+        <div><div class="muted" style="font-size:12px">Code received · 4:12 PM</div><div class="mono" style="margin-top:4px">849-201</div></div>
+        <div class="btn a"><svg class="ic18"><use href="#i-copy"/></svg>Copy</div>
+      </div>
+      <div class="row" style="margin-top:10px;gap:8px">
+        <svg class="ic18 muted"><use href="#i-clock"/></svg>
+        <div class="muted" style="font-size:12px">Earlier code · 4:03 PM</div>
+        <div class="mono" style="font-size:15px;letter-spacing:1px;margin-left:auto">112-804</div>
+      </div>
+    </div>
+    <div class="toast"><svg class="ic18 in"><use href="#i-check"/></svg>Code copied</div>
+    <div class="nav">
+      <div class="tab"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+      <div class="tab active"><svg class="ic"><use href="#i-phone"/></svg>Numbers</div>
+      <div class="tab"><svg class="ic"><use href="#i-bag"/></svg>Market</div>
+      <div class="tab"><svg class="ic"><use href="#i-coin"/></svg>Earn</div>
+      <div class="tab"><svg class="ic"><use href="#i-wallet"/></svg>Wallet</div>
+    </div>
+  </div>
+</div>
+
+<div class="frame-wrap">
+  <div class="frame-label"><span class="n">08</span>Gift cards — pick card, type, value, rate locked, payout shown, proof</div>
+  <div class="phone">
+    <div class="status"><span>9:41</span><svg width="46" height="12" viewBox="0 0 46 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/><path d="M23.5 5.2a8.6 8.6 0 0 1 11 0l-1.7 1.9a6 6 0 0 0-7.6 0z"/><circle cx="29" cy="9.6" r="1.5"/><rect x="36" y="3" width="8.5" height="6" rx="2" fill="none" stroke="currentColor" stroke-width="1.1"/><rect x="37.4" y="4.4" width="4.6" height="3.2" rx="1"/><rect x="45" y="5" width="1" height="2" rx="0.5"/></svg></div>
+    <div class="screen">
+      <div style="height:56px;display:flex;align-items:center;gap:12px">
+        <svg class="ic" style="transform:rotate(180deg)"><use href="#i-chev"/></svg>
+        <div class="sec">Redeem gift card</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="gtile on"><div><div class="gname">Amazon</div><div class="gsub">Physical · E-code</div></div><div class="muted" style="font-size:12px">$10 – $500</div><div class="tick"><svg class="ic14"><use href="#i-check"/></svg></div></div>
+        <div class="gtile"><div><div class="gname">Apple / iTunes</div><div class="gsub">Physical · E-code</div></div><div class="muted" style="font-size:12px">$10 – $500</div></div>
+        <div class="gtile"><div><div class="gname">Google Play</div><div class="gsub">E-code</div></div><div class="muted" style="font-size:12px">$10 – $100</div></div>
+        <div class="gtile"><div><div class="gname">Steam</div><div class="gsub">E-code</div></div><div class="muted" style="font-size:12px">$5 – $200</div></div>
+      </div>
+      <div class="card" style="padding:14px;margin-top:12px">
+        <div class="muted" style="font-size:12px">Card type</div>
+        <div class="row" style="margin-top:8px;gap:8px"><div class="chip sel">Physical</div><div class="chip">E-code</div></div>
+        <div class="muted" style="font-size:12px;margin-top:12px">Value</div>
+        <div class="input" style="margin-top:8px;justify-content:space-between"><span>$50</span><span class="muted" style="font-size:13px">USD</span></div>
+        <div class="srow" style="padding-top:10px"><span class="k">Rate</span><span style="font-weight:600">₦1,450 / $1</span></div>
+        <div class="srow" style="padding-top:2px"><span class="k">Rate lock</span><span>Locked at submit</span></div>
+        <div class="divider" style="margin:10px 0"></div>
+        <div class="srow" style="font-weight:600;font-size:17px;padding-top:0"><span>You get</span><span class="in">₦72,500</span></div>
+      </div>
+      <div class="dashed" style="margin-top:12px"><svg class="ic"><use href="#i-camera"/></svg><div>Add 1 – 4 photos of the card</div><div class="muted" style="font-size:12px">Up to 3 MB each · or type the code instead</div></div>
+      <div class="btn-main" style="margin-top:16px">Submit gift card</div>
+    </div>
+    <div class="nav">
+      <div class="tab"><svg class="ic"><use href="#i-home"/></svg>Home</div>
+      <div class="tab"><svg class="ic"><use href="#i-phone"/></svg>Numbers</div>
+      <div class="tab"><svg class="ic"><use href="#i-bag"/></svg>Market</div>
+      <div class="tab active"><svg class="ic"><use href="#i-coin"/></svg>Earn</div>
+      <div class="tab"><svg class="ic"><use href="#i-wallet"/></svg>Wallet</div>
+    </div>
+  </div>
+</div>
+</main>
+
+<p class="foot">All measurements follow the spec: 16 dp side padding · 12 dp gaps · 16 dp card radius · 52 dp main and 36 dp small buttons · 34 dp chips · 22 dp badges · 64 dp bottom bar with a 1 dp #2C2C2E top line · 32 sp monospace code with 4 dp letter spacing · 34 sp balance · toast 44 dp sitting 16 dp above the bar. Money figures are sample data and agree across all frames (same balance ₦78,390 and the same five ledger lines).</p>
+</body>
+</html>
+

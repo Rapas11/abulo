@@ -1,0 +1,13 @@
+# Dependencies and builds
+node_modules/
+dist/
+.expo/
+web-build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS junk
+.DS_Store
+Thumbs.db

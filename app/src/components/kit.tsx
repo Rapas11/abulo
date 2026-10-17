@@ -26,7 +26,7 @@ export function SectionHeader({
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionTitle}>{title}</Text>
       {action ? (
-        <Pressable onPress={onAction} hitSlop={10}>
+        <Pressable onPress={onAction} hitSlop={10} style={styles.sectionAction}>
           <Text style={styles.link}>{action}</Text>
         </Pressable>
       ) : null}
@@ -239,7 +239,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionTitle: { ...typography.sectionTitle, color: colors.text },
-  link: { ...typography.button, fontSize: 13, color: colors.accent, marginLeft: 'auto' },
+  sectionAction: { marginLeft: 'auto' },
+  link: { ...typography.button, fontSize: 13, color: colors.accent },
   smallButton: {
     height: size.smallButton,
     borderRadius: radius.smallButton,

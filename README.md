@@ -21,6 +21,20 @@ npx expo start          # scan the QR with Expo Go on Android
 npx expo start --web    # or open it in the browser
 ```
 
+To preview a production build locally:
+
+```sh
+cd app
+npx expo export -p web  # static build into dist/
+node scripts/serve-dist.mjs   # serves dist/ at http://localhost:4173
+```
+
+## Known issues
+
+- Web (static build): a hydration console warning fires once on load (`Minified React error #418`).
+  The page redraws itself in milliseconds and is unaffected, and Android has no hydration at all.
+  Revisit when polishing the web version.
+
 ## Sprint progress
 
 - [x] Sprint 0 — foundation: repo, theme tokens, five-tab shell, empty states

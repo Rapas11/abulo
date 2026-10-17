@@ -42,6 +42,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: layout.screenPadding,
     paddingTop: 8,
     paddingBottom: 32,
+    width: '100%',
+    maxWidth: layout.contentMaxWidth,
+    alignSelf: 'center',
   },
   title: {
     ...typography.screenTitle,

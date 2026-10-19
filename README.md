@@ -29,6 +29,15 @@ npx expo export -p web  # static build into dist/
 node scripts/serve-dist.mjs   # serves dist/ at http://localhost:4173
 ```
 
+## Trying sign-in (demo mode)
+
+Auth currently runs on a local mock — no server needed. Create any account; the
+verification / reset code appears on screen in the demo banner. Accounts live on
+the device only. When the Supabase project is ready, only `app/src/lib/auth.ts`
+needs a real implementation — screens and state stay untouched.
+
+By design, reopening the app asks for your 6-digit PIN.
+
 ## Known issues
 
 - Web (static build): a hydration console warning fires once on load (`Minified React error #418`).
@@ -38,7 +47,7 @@ node scripts/serve-dist.mjs   # serves dist/ at http://localhost:4173
 ## Sprint progress
 
 - [x] Sprint 0 — foundation: repo, theme tokens, five-tab shell, empty states
-- [ ] Sprint 1 — auth: email + password, profile, 6-digit PIN
+- [x] Sprint 1 — auth: sign up, email verify, PIN setup/unlock, reset password, profile
 - [ ] Sprint 2 — wallet + deposits (Paystack, ledger, server-side money rules)
 - [ ] Sprint 3 — withdrawals (bank, name check, fees, limits)
 - [ ] Sprint 4 — numbers (5sim adapter, buy flow, code inbox, auto refund)

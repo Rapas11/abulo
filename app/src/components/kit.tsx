@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { ComponentProps, ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 import { formatNaira } from '@/lib/money';
 import { colors, layout, radius, size, typography } from '@/theme';
@@ -67,6 +67,52 @@ export function SmallButton({
       <Text style={[typography.button, { color: accent ? colors.onAccent : colors.text }]}>
         {label}
       </Text>
+    </Pressable>
+  );
+}
+
+export function MainButton({
+  label,
+  variant = 'accent',
+  icon,
+  onPress,
+  disabled,
+  loading,
+  style,
+}: {
+  label: string;
+  variant?: ButtonVariant;
+  icon?: IconName;
+  onPress?: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+  style?: ViewStyle;
+}) {
+  const accent = variant === 'accent';
+  const off = disabled || loading;
+  return (
+    <Pressable
+      disabled={off}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.mainButton,
+        accent ? styles.smallButtonAccent : styles.smallButtonRaised,
+        pressed && { backgroundColor: accent ? colors.accentPressed : colors.pressed },
+        off && { opacity: 0.7 },
+        style,
+      ]}>
+      {loading ? (
+        <ActivityIndicator size="small" color={accent ? colors.onAccent : colors.text} />
+      ) : (
+        <>
+          {icon ? (
+            <Ionicons name={icon} size={20} color={accent ? colors.onAccent : colors.text} />
+          ) : null}
+          <Text style={[typography.button, { color: accent ? colors.onAccent : colors.text }]}>
+            {label}
+          </Text>
+        </>
+      )}
     </Pressable>
   );
 }
@@ -253,6 +299,15 @@ const styles = StyleSheet.create({
   },
   smallButtonAccent: { backgroundColor: colors.accent },
   smallButtonRaised: { backgroundColor: colors.raised },
+  mainButton: {
+    height: size.mainButton,
+    borderRadius: radius.button,
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
   iconCircle: {
     width: size.tileIconCircle,
     height: size.tileIconCircle,

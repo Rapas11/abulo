@@ -4,18 +4,20 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Screen } from '@/components/Screen';
 import { BalanceCard, EmptyState, SectionHeader, TileButton } from '@/components/kit';
+import { useAuth } from '@/lib/auth-context';
 import { colors, typography } from '@/theme';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const displayName = user ? user.name.split(' ')[0] : 'Guest';
 
   return (
     <Screen>
       <View style={styles.topBar}>
         <View>
           <Text style={styles.greeting}>Good evening</Text>
-          {/* TODO(Sprint 1): real profile name after auth lands */}
-          <Text style={styles.name}>Guest</Text>
+          <Text style={styles.name}>{displayName}</Text>
         </View>
         <View>
           <Ionicons name="notifications-outline" size={24} color={colors.text} />

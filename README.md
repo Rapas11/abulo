@@ -37,7 +37,12 @@ The app is wired to the real Supabase project:
 - Publishable key is in `app/src/lib/supabase.ts` (safe to ship; override with
   `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` if needed).
 
-One-time setup (the publishable key cannot create tables by itself):
+**Status (19 Oct 2026):** this project is already provisioned — the schema is
+applied and “Confirm email” is off, so the first sign-up is immediately usable
+and becomes admin. The steps below are for a fresh project or after a reset.
+The publishable key cannot create tables by itself.
+
+One-time setup:
 
 1. Open **Supabase → SQL Editor**, paste `supabase/schema.sql`, and click **Run**.
 2. Open **Authentication → Sign In / Providers → Email** and turn **off**
@@ -53,6 +58,9 @@ What is real now:
 - Wallet ledger, deposits/withdrawals, numbers, tasks, gift cards, listing
   purchases, seller payouts and the admin panel — all data lives in Postgres.
 - All money rules run in SQL functions; the app cannot write balances directly.
+- Smoke-tested against this project: sign-up/PIN, deposit, number purchase and
+  SMS, gift-card payout, task approval, admin panel, and blocked direct ledger
+  writes.
 
 Still simulated until provider keys arrive:
 
@@ -64,9 +72,10 @@ Still simulated until provider keys arrive:
 
 ## Trying the app
 
-Create an account with any email you can open. The first account becomes the
-admin, so the “Admin panel” entry appears under Profile. Use the Deposit button
-to add demo funds before buying numbers, gift cards, accounts or posting tasks.
+Create an account with any valid email. Email confirmation is off on the current
+test project, so no inbox step is needed; the first account becomes the admin,
+so the “Admin panel” entry appears under Profile. Use the Deposit button to add
+demo funds before buying numbers, gift cards, accounts or posting tasks.
 
 By design, reopening the app asks for your 6-digit PIN. The PIN is a local
 device lock stored hashed in AsyncStorage; the account itself is in Supabase.

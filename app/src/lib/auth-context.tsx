@@ -7,6 +7,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 
 import { backend, type AbuloUser, type AuthResult } from './auth';
+import { clearDb } from './db';
 
 type SignUpData = { user: AbuloUser; demoCode: string };
 
@@ -28,6 +29,7 @@ type AuthContextValue = {
   setPin(pin: string): Promise<AuthResult<AbuloUser>>;
   unlock(pin: string): Promise<AuthResult<true>>;
   updateName(name: string): Promise<AuthResult<AbuloUser>>;
+  listUsers(): Promise<AbuloUser[]>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -86,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     await backend.signOut();
+    clearDb();
     setUser(null);
     setLocked(false);
     setDemoCode(null);
@@ -98,8 +101,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetPassword = useCallback(
-    async (email: string, code: string, newPassword: string) =>
-      backend.resetPassword(email, code, newPassword),
+    async (email: string, code: string, newPassword: string) => {
+      const result = await backend.resetPassword(email, code, newPassword);
+      if (result.ok) {
+        clearDb();
+        setUser(null);
+        setLocked(false);
+        setDemoCode(null);
+      }
+      return result;
+    },
     [],
   );
 
@@ -124,6 +135,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return result;
   }, []);
 
+  const listUsers = useCallback(async () => backend.listUsers(), []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -141,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setPin,
         unlock,
         updateName,
+        listUsers,
       }}>
       {children}
     </AuthContext.Provider>

@@ -117,6 +117,65 @@ export function MainButton({
   );
 }
 
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <View style={styles.segmented}>
+      {options.map((option) => {
+        const active = option.value === value;
+        return (
+          <Pressable
+            key={option.value}
+            onPress={() => onChange(option.value)}
+            style={[styles.segment, active && styles.segmentActive]}>
+            <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>
+              {option.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+export function StatusPill({
+  label,
+  tone = 'warn',
+}: {
+  label: string;
+  tone?: 'ok' | 'warn' | 'bad' | 'muted';
+}) {
+  const color =
+    tone === 'ok'
+      ? colors.moneyIn
+      : tone === 'bad'
+        ? colors.danger
+        : tone === 'muted'
+          ? colors.textSecondary
+          : colors.warning;
+  return (
+    <View style={[styles.pill, { borderColor: color }]}>
+      <Text style={[styles.pillText, { color }]}>{label}</Text>
+    </View>
+  );
+}
+
+export function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.infoRow}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
+    </View>
+  );
+}
+
 export function IconCircle({ name }: { name: IconName }) {
   return (
     <View style={styles.iconCircle}>
@@ -370,4 +429,38 @@ const styles = StyleSheet.create({
   entryBadgeText: { fontSize: 11, color: colors.textSecondary },
   stat: { flex: 1, alignItems: 'center' },
   statLabel: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
+  segmented: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderRadius: radius.input,
+    padding: 3,
+    gap: 3,
+  },
+  segment: {
+    flex: 1,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentActive: { backgroundColor: colors.raised },
+  segmentLabel: { fontSize: 14, fontWeight: '500', color: colors.textSecondary },
+  segmentLabelActive: { color: colors.text, fontWeight: '600' },
+  pill: {
+    borderWidth: 1,
+    borderRadius: radius.badge,
+    paddingHorizontal: 8,
+    paddingVertical: 1,
+    alignSelf: 'flex-start',
+  },
+  pillText: { fontSize: 10, fontWeight: '700' },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingVertical: 3,
+  },
+  infoLabel: { ...typography.caption, color: colors.textSecondary },
+  infoValue: { ...typography.body, color: colors.text, flexShrink: 1, textAlign: 'right' },
 });

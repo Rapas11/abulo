@@ -2,7 +2,9 @@ import { DarkTheme, Stack, ThemeProvider, useRouter, useSegments, type Href } fr
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { ConfirmProvider } from '@/components/ConfirmSheet';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
+import { clearDb, loadDb } from '@/lib/db';
 import { colors } from '@/theme';
 
 /** Abulo is dark-mode only — force the dark theme with our palette. */
@@ -56,19 +58,35 @@ function AuthGate() {
   return null;
 }
 
+/** Keeps the local data mirror in sync with the signed-in Supabase user. */
+function DataGate() {
+  const { ready, user } = useAuth();
+
+  useEffect(() => {
+    if (!ready) return;
+    if (user?.verified) void loadDb();
+    else clearDb();
+  }, [ready, user?.id, user?.verified]);
+
+  return null;
+}
+
 export default function RootLayout() {
   return (
     <AuthProvider>
       <ThemeProvider value={abuloTheme}>
-        <StatusBar style="light" />
-        <AuthGate />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.bg },
-            animation: 'fade',
-          }}
-        />
+        <ConfirmProvider>
+          <StatusBar style="light" />
+          <AuthGate />
+          <DataGate />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.bg },
+              animation: 'fade',
+            }}
+          />
+        </ConfirmProvider>
       </ThemeProvider>
     </AuthProvider>
   );

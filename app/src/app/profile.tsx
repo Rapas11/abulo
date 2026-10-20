@@ -36,7 +36,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <Screen title="Profile">
+    <Screen title="Profile" back>
       <View style={styles.identity}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials || 'A'}</Text>
@@ -47,7 +47,9 @@ export default function ProfileScreen() {
           {user?.verified ? (
             <View style={styles.verifiedRow}>
               <Ionicons name="checkmark-circle" size={14} color={colors.moneyIn} />
-              <Text style={styles.verified}>Email verified</Text>
+              <Text style={styles.verified}>
+                Email verified{user.role === 'admin' ? ' · Admin' : ''}
+              </Text>
             </View>
           ) : null}
         </View>
@@ -74,6 +76,18 @@ export default function ProfileScreen() {
         subtitle="Update your 6-digit unlock code"
         onPress={() => router.push('/pin-change')}
       />
+
+      {user?.role === 'admin' ? (
+        <>
+          <SectionHeader title="Admin" />
+          <EntryCard
+            icon="shield-checkmark-outline"
+            title="Admin panel"
+            subtitle="Tasks, approvals, orders, settings"
+            onPress={() => router.push('/admin')}
+          />
+        </>
+      ) : null}
 
       <SectionHeader title="Session" />
       <EntryCard

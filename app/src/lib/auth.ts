@@ -1,14 +1,15 @@
 /**
- * Auth backend — Sprint 1 runs on a local mock.
+ * Real authentication + device PIN, backed by Supabase Auth.
  *
- * Everything (sign up, verify, sign in, PIN, password reset) works on the device
- * with AsyncStorage, so the app is fully usable before the real backend exists.
- * When the Supabase project is created, only this file changes: implement
- * `AuthBackend` with Supabase and export it as `backend`. Screens never import
- * this file — they talk to `AuthProvider` (src/lib/auth-context.tsx).
+ * The rest of the app only talks to this module through `AuthBackend`.
+ * The PIN is a local device lock (stored hashed in AsyncStorage), while the
+ * account itself lives in Supabase.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { User } from '@supabase/supabase-js';
 import * as Crypto from 'expo-crypto';
+
+import { getSupabase } from './supabase';
 
 export type AbuloUser = {
   id: string;
@@ -16,6 +17,7 @@ export type AbuloUser = {
   email: string;
   verified: boolean;
   hasPin: boolean;
+  role: 'admin' | 'user';
   createdAt: number;
 };
 
@@ -42,208 +44,256 @@ export type AuthBackend = {
   setPin(pin: string): Promise<AuthResult<AbuloUser>>;
   verifyPin(pin: string): Promise<AuthResult<true>>;
   updateName(name: string): Promise<AuthResult<AbuloUser>>;
+  /** Every account visible to the admin directory. */
+  listUsers(): Promise<AbuloUser[]>;
 };
 
-type StoredUser = Omit<AbuloUser, 'hasPin'> & {
-  passwordHash: string;
-  salt: string;
-  pinHash: string | null;
-  /** Fake email codes. The verification/reset screens show these in demo mode. */
-  verifyCode: string | null;
-  resetCode: string | null;
-};
+const PENDING_EMAIL_KEY = 'abulo.auth.pending-email.v1';
+const PIN_KEY = (userId: string) => `abulo.pin.v1.${userId}`;
 
-const USERS_KEY = 'abulo.auth.users.v1';
-const SESSION_KEY = 'abulo.auth.session.v1';
-const FAKE_LATENCY_MS = 350;
+type StoredPin = { salt: string; hash: string };
 
-let currentUserId: string | null = null;
+function friendlyAuthError(message: string): string {
+  const text = message.toLowerCase();
+  if (text.includes('invalid login credentials')) return 'Wrong email or password.';
+  if (text.includes('email not confirmed')) return 'Confirm your email first — check your inbox.';
+  if (text.includes('already registered') || text.includes('already exists')) {
+    return 'An account with this email already exists.';
+  }
+  if (text.includes('password should be at least')) return 'Password must be at least 6 characters.';
+  if (text.includes('should be different from the old password')) {
+    return 'Choose a password you have not used before.';
+  }
+  if (text.includes('token has expired') || text.includes('invalid') && text.includes('token')) {
+    return 'That code is invalid or expired.';
+  }
+  if (text.includes('for security purposes') || text.includes('rate limit')) {
+    return 'Too many attempts. Wait a minute and try again.';
+  }
+  if (text.includes('invalid email')) return 'Enter a valid email address.';
+  if (text.includes('fetch') || text.includes('network')) {
+    return 'Network error. Check your connection and try again.';
+  }
+  return message;
+}
 
-const delay = (ms = FAKE_LATENCY_MS) => new Promise((resolve) => setTimeout(resolve, ms));
+async function hashPin(pin: string, salt: string): Promise<string> {
+  return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, `${salt}:${pin}`);
+}
 
-async function loadUsers(): Promise<Record<string, StoredUser>> {
-  const raw = await AsyncStorage.getItem(USERS_KEY);
-  if (!raw) return {};
+async function readPin(userId: string): Promise<StoredPin | null> {
+  const raw = await AsyncStorage.getItem(PIN_KEY(userId));
+  if (!raw) return null;
   try {
-    return JSON.parse(raw) as Record<string, StoredUser>;
+    return JSON.parse(raw) as StoredPin;
   } catch {
-    return {};
+    return null;
   }
 }
 
-async function saveUsers(users: Record<string, StoredUser>) {
-  await AsyncStorage.setItem(USERS_KEY, JSON.stringify(users));
+async function hasPin(userId: string): Promise<boolean> {
+  return Boolean(await readPin(userId));
 }
 
-async function hash(value: string, salt: string) {
-  return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, `${salt}:${value}`);
-}
+async function mapUser(authUser: User): Promise<AbuloUser> {
+  const supabase = getSupabase();
+  const email = authUser.email ?? '';
+  const metadataName =
+    typeof authUser.user_metadata?.name === 'string' ? authUser.user_metadata.name : '';
 
-function randomCode() {
-  const value = Crypto.getRandomValues(new Uint32Array(1))[0] % 900000;
-  return String(100000 + value);
-}
+  let profile: { name: string; role: 'admin' | 'user'; created_at: string } | null = null;
+  const { data } = await supabase
+    .from('profiles')
+    .select('name, role, created_at')
+    .eq('id', authUser.id)
+    .maybeSingle();
+  if (data) profile = data as { name: string; role: 'admin' | 'user'; created_at: string };
 
-function toPublic(user: StoredUser): AbuloUser {
   return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    verified: user.verified,
-    hasPin: Boolean(user.pinHash),
-    createdAt: user.createdAt,
+    id: authUser.id,
+    name: profile?.name ?? metadataName ?? email.split('@')[0] ?? 'Abulo user',
+    email,
+    verified: Boolean(authUser.email_confirmed_at ?? authUser.confirmed_at),
+    hasPin: await hasPin(authUser.id),
+    role: profile?.role ?? 'user',
+    createdAt: profile ? new Date(profile.created_at).getTime() : new Date(authUser.created_at).getTime(),
   };
-}
-
-async function currentUser(users: Record<string, StoredUser>): Promise<StoredUser | undefined> {
-  if (!currentUserId) return undefined;
-  return Object.values(users).find((user) => user.id === currentUserId);
 }
 
 export const backend: AuthBackend = {
   async restoreSession() {
-    const id = await AsyncStorage.getItem(SESSION_KEY);
-    if (!id) return null;
-    const users = await loadUsers();
-    const user = Object.values(users).find((u) => u.id === id);
-    if (!user) return null;
-    currentUserId = user.id;
-    return toPublic(user);
+    const supabase = getSupabase();
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session?.user) return null;
+    return mapUser(data.session.user);
   },
 
   async signUp({ name, email, password }) {
-    await delay();
     const cleanName = name.trim();
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanName) return { ok: false, error: 'Enter your full name.' };
-    if (!/\S+@\S+\.\S+/.test(cleanEmail)) return { ok: false, error: 'Enter a valid email address.' };
-    if (password.length < 8) {
-      return { ok: false, error: 'Use at least 8 characters for your password.' };
-    }
+    if (!cleanEmail) return { ok: false, error: 'Enter your email address.' };
+    if (password.length < 8) return { ok: false, error: 'Password must be at least 8 characters.' };
 
-    const users = await loadUsers();
-    if (users[cleanEmail]) {
-      return { ok: false, error: 'An account with this email already exists. Sign in instead.' };
-    }
-
-    const salt = Crypto.randomUUID();
-    const user: StoredUser = {
-      id: Crypto.randomUUID(),
-      name: cleanName,
+    const supabase = getSupabase();
+    const { data, error } = await supabase.auth.signUp({
       email: cleanEmail,
-      verified: false,
-      createdAt: Date.now(),
-      passwordHash: await hash(password, salt),
-      salt,
-      pinHash: null,
-      verifyCode: randomCode(),
-      resetCode: null,
+      password,
+      options: { data: { name: cleanName } },
+    });
+    if (error) return { ok: false, error: friendlyAuthError(error.message) };
+    if (!data.user) return { ok: false, error: 'Could not create the account. Try again.' };
+    if (data.user.identities && data.user.identities.length === 0) {
+      return { ok: false, error: 'An account with this email already exists.' };
+    }
+
+    await AsyncStorage.setItem(PENDING_EMAIL_KEY, cleanEmail);
+    return {
+      ok: true,
+      data: { user: await mapUser(data.user), demoCode: '' },
     };
-    users[cleanEmail] = user;
-    await saveUsers(users);
-    await AsyncStorage.setItem(SESSION_KEY, user.id);
-    currentUserId = user.id;
-    return { ok: true, data: { user: toPublic(user), demoCode: user.verifyCode ?? '' } };
   },
 
   async verifyEmail(code) {
-    await delay();
-    const users = await loadUsers();
-    const user = await currentUser(users);
-    if (!user) return { ok: false, error: 'Session expired. Sign in again.' };
-    if (!user.verifyCode || user.verifyCode !== code.trim()) {
-      return { ok: false, error: 'That code is not correct. Check it and try again.' };
-    }
-    user.verifyCode = null;
-    user.verified = true;
-    await saveUsers(users);
-    return { ok: true, data: toPublic(user) };
+    const cleanCode = code.trim();
+    if (!/^\d{6}$/.test(cleanCode)) return { ok: false, error: 'Enter the 6-digit code.' };
+
+    const supabase = getSupabase();
+    const email =
+      (await AsyncStorage.getItem(PENDING_EMAIL_KEY)) ??
+      (await supabase.auth.getUser()).data.user?.email ??
+      '';
+    if (!email) return { ok: false, error: 'Request a new code.' };
+
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token: cleanCode,
+      type: 'signup',
+    });
+    if (error) return { ok: false, error: friendlyAuthError(error.message) };
+    if (!data.user) return { ok: false, error: 'Could not verify the email.' };
+
+    await AsyncStorage.removeItem(PENDING_EMAIL_KEY);
+    return { ok: true, data: await mapUser(data.user) };
   },
 
   async resendVerifyCode() {
-    await delay();
-    const users = await loadUsers();
-    const user = await currentUser(users);
-    if (!user) return { ok: false, error: 'Session expired. Sign in again.' };
-    user.verifyCode = randomCode();
-    await saveUsers(users);
-    return { ok: true, data: { demoCode: user.verifyCode } };
+    const supabase = getSupabase();
+    const email = await AsyncStorage.getItem(PENDING_EMAIL_KEY);
+    if (!email) return { ok: false, error: 'Go back and sign up again.' };
+
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    if (error) return { ok: false, error: friendlyAuthError(error.message) };
+    return { ok: true, data: { demoCode: '' } };
   },
 
   async signIn(email, password) {
-    await delay();
-    const cleanEmail = email.trim().toLowerCase();
-    const users = await loadUsers();
-    const user = users[cleanEmail];
-    if (!user || (await hash(password, user.salt)) !== user.passwordHash) {
-      return { ok: false, error: 'Wrong email or password.' };
-    }
-    await AsyncStorage.setItem(SESSION_KEY, user.id);
-    currentUserId = user.id;
-    return { ok: true, data: toPublic(user) };
+    const supabase = getSupabase();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+    if (error) return { ok: false, error: friendlyAuthError(error.message) };
+    if (!data.user) return { ok: false, error: 'Sign in failed. Try again.' };
+    return { ok: true, data: await mapUser(data.user) };
   },
 
   async signOut() {
-    await AsyncStorage.removeItem(SESSION_KEY);
-    currentUserId = null;
+    const supabase = getSupabase();
+    await supabase.auth.signOut();
+    await AsyncStorage.removeItem(PENDING_EMAIL_KEY);
   },
 
   async requestPasswordReset(email) {
-    await delay();
-    const users = await loadUsers();
-    const user = users[email.trim().toLowerCase()];
-    if (!user) return { ok: false, error: 'No Abulo account uses this email.' };
-    user.resetCode = randomCode();
-    await saveUsers(users);
-    return { ok: true, data: { demoCode: user.resetCode } };
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) return { ok: false, error: 'Enter your email address.' };
+
+    const supabase = getSupabase();
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail);
+    if (error) return { ok: false, error: friendlyAuthError(error.message) };
+    return { ok: true, data: { demoCode: '' } };
   },
 
   async resetPassword(email, code, newPassword) {
-    await delay();
     if (newPassword.length < 8) {
-      return { ok: false, error: 'Use at least 8 characters for your password.' };
+      return { ok: false, error: 'Password must be at least 8 characters.' };
     }
-    const users = await loadUsers();
-    const user = users[email.trim().toLowerCase()];
-    if (!user || !user.resetCode || user.resetCode !== code.trim()) {
-      return { ok: false, error: 'That code is not correct. Check it and try again.' };
-    }
-    user.passwordHash = await hash(newPassword, user.salt);
-    user.resetCode = null;
-    await saveUsers(users);
+    const supabase = getSupabase();
+
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email: email.trim().toLowerCase(),
+      token: code.trim(),
+      type: 'recovery',
+    });
+    if (verifyError) return { ok: false, error: friendlyAuthError(verifyError.message) };
+
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    if (updateError) return { ok: false, error: friendlyAuthError(updateError.message) };
+
+    // Make the person sign in again with the new password.
+    await supabase.auth.signOut();
     return { ok: true, data: true };
   },
 
   async setPin(pin) {
-    await delay(250);
-    if (!/^\d{6}$/.test(pin)) return { ok: false, error: 'Your PIN must be exactly 6 digits.' };
-    const users = await loadUsers();
-    const user = await currentUser(users);
-    if (!user) return { ok: false, error: 'Session expired. Sign in again.' };
-    user.pinHash = await hash(pin, user.salt);
-    await saveUsers(users);
-    return { ok: true, data: toPublic(user) };
+    if (!/^\d{6}$/.test(pin)) return { ok: false, error: 'PIN must be 6 digits.' };
+    const supabase = getSupabase();
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) return { ok: false, error: 'Session expired. Sign in again.' };
+
+    const salt = Crypto.randomUUID();
+    const hash = await hashPin(pin, salt);
+    await AsyncStorage.setItem(PIN_KEY(data.user.id), JSON.stringify({ salt, hash }));
+    return { ok: true, data: await mapUser(data.user) };
   },
 
   async verifyPin(pin) {
-    await delay(250);
-    const users = await loadUsers();
-    const user = await currentUser(users);
-    if (!user || !user.pinHash) return { ok: false, error: 'No PIN set on this account.' };
-    const attempt = await hash(pin, user.salt);
-    if (attempt !== user.pinHash) return { ok: false, error: 'Wrong PIN.' };
+    if (!/^\d{6}$/.test(pin)) return { ok: false, error: 'Wrong PIN.' };
+    const supabase = getSupabase();
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return { ok: false, error: 'Session expired. Sign in again.' };
+
+    const stored = await readPin(data.user.id);
+    if (!stored) return { ok: false, error: 'No PIN set on this account.' };
+
+    const attempt = await hashPin(pin, stored.salt);
+    if (attempt !== stored.hash) return { ok: false, error: 'Wrong PIN.' };
     return { ok: true, data: true };
   },
 
   async updateName(name) {
-    await delay();
     const cleanName = name.trim();
     if (!cleanName) return { ok: false, error: 'Name cannot be empty.' };
-    const users = await loadUsers();
-    const user = await currentUser(users);
-    if (!user) return { ok: false, error: 'Session expired. Sign in again.' };
-    user.name = cleanName;
-    await saveUsers(users);
-    return { ok: true, data: toPublic(user) };
+
+    const supabase = getSupabase();
+    const { error } = await supabase.rpc('update_my_name', { p_name: cleanName });
+    if (error) return { ok: false, error: friendlyAuthError(error.message) };
+
+    const { error: metadataError } = await supabase.auth.updateUser({
+      data: { name: cleanName },
+    });
+    if (metadataError) return { ok: false, error: friendlyAuthError(metadataError.message) };
+
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) return { ok: false, error: 'Session expired. Sign in again.' };
+    return { ok: true, data: await mapUser(data.user) };
+  },
+
+  async listUsers() {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, name, role, created_at')
+      .order('created_at', { ascending: true });
+    if (error) return [];
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      email: '',
+      verified: true,
+      hasPin: false,
+      role: row.role as 'admin' | 'user',
+      createdAt: new Date(row.created_at).getTime(),
+    }));
   },
 };

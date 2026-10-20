@@ -66,8 +66,8 @@ export default function ForgotScreen() {
         <Text style={styles.title}>Reset password</Text>
         <Text style={styles.caption}>
           {step === 'email'
-            ? 'Enter your email and we will send a 6-digit code.'
-            : `Enter the code we sent to ${email.trim()} and choose a new password.`}
+            ? 'Enter your email and we will send a reset code.'
+            : `Enter the code from the email sent to ${email.trim()} and choose a new password.`}
         </Text>
       </View>
 

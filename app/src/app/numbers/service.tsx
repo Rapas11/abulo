@@ -1,0 +1,122 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+
+import { useConfirm } from '@/components/ConfirmSheet';
+import { Screen } from '@/components/Screen';
+import { ErrorText } from '@/components/fields';
+import { Card, EmptyState, InfoRow, MainButton } from '@/components/kit';
+import { buyNumber } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
+import { COUNTRIES, SERVICES, numberPriceKobo } from '@/lib/catalog';
+import { balanceOf, useDb } from '@/lib/db';
+import { formatNaira } from '@/lib/money';
+import { colors, typography } from '@/theme';
+
+export default function NumberServiceScreen() {
+  const router = useRouter();
+  const confirm = useConfirm();
+  const { user } = useAuth();
+  const db = useDb();
+  const params = useLocalSearchParams<{ country?: string; service?: string }>();
+  const country = COUNTRIES.find((item) => item.code === params.country) ?? COUNTRIES[0];
+  const service = SERVICES.find((item) => item.id === params.service);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  if (!service) {
+    return (
+      <Screen title="Number" back>
+        <EmptyState icon="alert-circle-outline" title="This service is not available" />
+      </Screen>
+    );
+  }
+
+  const price = numberPriceKobo(service, country, db.settings.numbersMarkupPct);
+  const balance = user ? balanceOf(db, user.id) : 0;
+  const insufficient = balance < price;
+
+  const buy = async () => {
+    if (!user || busy) return;
+    setError(null);
+    if (insufficient) {
+      setError('Not enough balance. Deposit first.');
+      return;
+    }
+    const approved = await confirm({
+      title: `Buy a ${service.name} number`,
+      amountKobo: price,
+      rows: [
+        { label: 'Country', value: `${country.flag} ${country.name}` },
+        { label: 'Delivery', value: 'SMS in the app' },
+        { label: 'Number', value: 'Generated after payment' },
+      ],
+      note: 'The number is yours until the order is cancelled or the code arrives.',
+      confirmLabel: 'Pay and get number',
+    });
+    if (!approved) return;
+
+    setBusy(true);
+    const result = await buyNumber(country.code, service.id);
+    setBusy(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    router.replace({ pathname: '/numbers/order/[id]', params: { id: result.data.id } });
+  };
+
+  return (
+    <Screen title={service.name} back>
+      <View style={styles.hero}>
+        <View style={styles.heroIcon}>
+          <Ionicons name={service.icon} size={34} color={colors.onAccent} />
+        </View>
+        <Text style={styles.heroCountry}>
+          {country.flag} {country.name} number
+        </Text>
+        <Text style={styles.heroPrice}>{formatNaira(price)}</Text>
+      </View>
+
+      <Card style={styles.card}>
+        <InfoRow label="Service" value={service.name} />
+        <InfoRow label="Country" value={`${country.flag} ${country.name}`} />
+        <InfoRow label="Delivery" value="SMS code in the app" />
+        <InfoRow label="Your balance" value={formatNaira(balance)} />
+      </Card>
+
+      <Text style={styles.note}>
+        Use the number once for verification. If no SMS arrives you can cancel the order and get a
+        full refund.
+      </Text>
+
+      {error ? <ErrorText>{error}</ErrorText> : null}
+
+      <View style={styles.actions}>
+        <MainButton
+          label={insufficient ? 'Deposit to continue' : `Buy for ${formatNaira(price)}`}
+          onPress={insufficient ? () => router.push('/wallet/deposit') : buy}
+          loading={busy}
+        />
+      </View>
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  hero: { alignItems: 'center', gap: 8, paddingVertical: 12 },
+  heroIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroCountry: { ...typography.body, color: colors.textSecondary, marginTop: 4 },
+  heroPrice: { ...typography.balance, color: colors.text },
+  card: { gap: 4, marginTop: 12 },
+  note: { ...typography.caption, color: colors.textSecondary, lineHeight: 18, marginTop: 14 },
+  actions: { marginTop: 20, gap: 12 },
+});

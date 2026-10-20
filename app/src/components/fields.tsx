@@ -23,17 +23,24 @@ type TextFieldProps = TextInputProps & {
 export function TextField({ label, error, style, inputStyle, secureTextEntry, ...rest }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(true);
+  const multiline = Boolean(rest.multiline);
 
   return (
     <View style={style}>
       <Text style={styles.label}>{label}</Text>
-      <View style={[styles.box, focused && styles.boxFocused, error ? styles.boxError : null]}>
+      <View
+        style={[
+          styles.box,
+          multiline && styles.boxMultiline,
+          focused && styles.boxFocused,
+          error ? styles.boxError : null,
+        ]}>
         <TextInput
           {...rest}
           secureTextEntry={secureTextEntry ? hidden : false}
           placeholderTextColor={colors.disabled}
           selectionColor={colors.accent}
-          style={[styles.input, inputStyle]}
+          style={[styles.input, multiline && styles.inputMultiline, inputStyle]}
           onFocus={(event) => {
             setFocused(true);
             rest.onFocus?.(event);
@@ -91,7 +98,9 @@ const styles = StyleSheet.create({
   },
   boxFocused: { borderColor: colors.accent },
   boxError: { borderColor: colors.danger },
+  boxMultiline: { height: 'auto', minHeight: 104, alignItems: 'flex-start', paddingVertical: 12 },
   input: { flex: 1, height: '100%', color: colors.text, fontSize: 15 },
+  inputMultiline: { height: 'auto', minHeight: 78, textAlignVertical: 'top' },
   eye: { paddingLeft: 8 },
   fieldError: { ...typography.caption, color: colors.danger, marginTop: 6 },
   errorText: { ...typography.body, color: colors.danger, textAlign: 'center' },

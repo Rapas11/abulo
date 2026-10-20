@@ -41,7 +41,8 @@ export default function VerifyScreen() {
       <View style={styles.hero}>
         <Text style={styles.title}>Confirm your email</Text>
         <Text style={styles.caption}>
-          We sent a 6-digit code to {user?.email ?? 'your email'}.
+          We sent a confirmation email to {user?.email ?? 'your email'}. Enter the 6-digit code if
+          your email includes one, or open the confirmation link.
         </Text>
       </View>
 
@@ -64,7 +65,7 @@ export default function VerifyScreen() {
           onSubmitEditing={submit}
         />
         {error ? <ErrorText>{error}</ErrorText> : null}
-        {resent ? <Text style={styles.resent}>A new code was generated, it is shown above.</Text> : null}
+        {resent ? <Text style={styles.resent}>A new confirmation email was sent.</Text> : null}
         <MainButton label="Verify email" onPress={submit} loading={busy} />
       </View>
 

@@ -860,8 +860,8 @@ set search_path = public
 as $$
 begin
   if not public.is_admin() then raise exception 'Admins only.'; end if;
-  if p_markup < 0 or p_markup > 300 then raise exception 'Markup must be between 0 and 300%.'; end if;
-  if p_fee < 0 or p_fee > 50 then raise exception 'Fee must be between 0 and 50%.'; end if;
+  if p_markup < 0 or p_markup > 300 then raise exception 'Markup must be between 0 and 300%%.'; end if;
+  if p_fee < 0 or p_fee > 50 then raise exception 'Fee must be between 0 and 50%%.'; end if;
   if p_withdrawal_fee_kobo < 0 or p_withdrawal_fee_kobo > 100000 then
     raise exception 'Withdrawal fee must be between ₦0 and ₦1,000.';
   end if;

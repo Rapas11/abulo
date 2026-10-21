@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/icon.png" width="104" alt="Abulo app icon" />
+<img src="site/assets/icon.png" width="104" alt="Abulo app icon" />
 
 # Abulo
 
@@ -20,7 +20,7 @@ for Android and the web.
 
 ---
 
-<img src="docs/assets/screen-sign-in.png" width="260" align="right" alt="Abulo sign-in screen" />
+<img src="site/assets/screen-sign-in.png" width="260" align="right" alt="Abulo sign-in screen" />
 
 ## What it is
 

@@ -1,103 +1,205 @@
+<div align="center">
+
+<img src="docs/assets/icon.png" width="104" alt="Abulo app icon" />
+
 # Abulo
 
-One wallet, four marketplaces: virtual numbers, accounts, gift cards and paid tasks.
-Dark mode only, single accent `#FF7A00`, Android first then web — all from one code base.
+**One wallet. Four marketplaces.**
 
-## Layout
+Virtual numbers, verified accounts, gift cards and paid tasks — in one dark-mode app
+for Android and the web.
 
-| Folder | What it is |
+[**Open the web app**](https://rapas11.github.io/abulo/app/) ·
+[**Download the APK**](https://github.com/Rapas11/abulo/releases/download/v0.1.0/abulo-0.1.0.apk) ·
+[**Project site**](https://rapas11.github.io/abulo/) ·
+[**Documentation**](#running-locally)
+
+<sub>Expo SDK 58 · React Native 0.88 · Supabase · TypeScript · Android + Web</sub>
+
+</div>
+
+---
+
+<img src="docs/assets/screen-sign-in.png" width="260" align="right" alt="Abulo sign-in screen" />
+
+## What it is
+
+Abulo is a wallet-first marketplace app. Money lives in one balance; every purchase,
+payout and fee is a ledger entry written by Postgres, never by the client. The same
+code base ships as an Android APK and a static web app.
+
+| Tab | What you can do |
 |---|---|
-| `app/` | Expo (React Native) app — Android and web. Routes in `src/app/`, design tokens in `src/theme.ts`. |
-| `design/` | HTML mockups of the five screens (v1 design reference). |
-| `admin/` | Admin panel web app (Sprint 8). |
-| `supabase/` | Database migrations and server functions (Sprint 1+). |
+| **Numbers** | Buy a virtual number for a service and country, read the SMS code in-app, get an automatic refund when no code arrives. |
+| **Earn** | Post a paid task with a held reward, or complete a task and submit proof. Approval releases the money. |
+| **Gift cards** | Submit a gift card at a published rate and watch it move from review to payout. |
+| **Market** | Buy a verified account from a seller, or list your own. Sellers are paid from the buyer's order. |
+| **Wallet** | Deposit, withdraw and audit every movement with a running balance. |
+| **Profile → Admin** | The first account becomes admin: approvals, order lookup, markup and fee settings, demo-mode switch. |
 
-## Run the app
+<br clear="right" />
+
+## Try it
+
+**Web** — <https://rapas11.github.io/abulo/app/> (no install, works in any modern browser).
+
+**Android** — [download `abulo-0.1.0.apk`](https://github.com/Rapas11/abulo/releases/download/v0.1.0/abulo-0.1.0.apk)
+(26.7 MB) and open it. Android will ask you to allow installs from your browser the
+first time. It is debug-signed, so Play Protect may show a warning — choose
+“Install anyway”.
+
+| | |
+|---|---|
+| Package | `com.abulo.app` |
+| Version | `0.1.0` (versionCode 1) |
+| ABIs | `arm64-v8a`, `armeabi-v7a` |
+| Min Android | 7.0 |
+| Signing | debug keystore — for testing only |
+
+### Three minutes to a demo wallet
+
+1. **Create an account** with any valid email. Email confirmation is off on the demo
+   project, so there is no inbox step; set a 6-digit PIN and you are in.
+2. **Deposit** from the wallet tab. Demo deposits credit the ledger instantly and take
+   no real money.
+3. **Buy something** — a number, a gift-card payout, a task reward or a marketplace
+   listing. Every spend ends with a confirm sheet that repeats the exact amount.
+
+Reopening the app asks for your PIN. That PIN is a local device lock (hashed in
+AsyncStorage); the account itself lives in Supabase.
+
+## Demo mode
+
+The app is fully wired to a live Supabase project. What is **real**: accounts,
+sessions, profiles, the wallet ledger, numbers orders, tasks, gift cards, marketplace
+listings, seller payouts and the admin panel — all rows in Postgres, all money rules in
+SQL functions.
+
+What is **simulated** until provider keys are added:
+
+| Flow | Current behaviour | Switch |
+|---|---|---|
+| Deposits / withdrawals | `deposit_demo` and `withdraw_money` move ledger money; no bank transfer | Paystack keys + webhook |
+| SMS delivery | A code appears after ~9 seconds | 5sim API key |
+| Gift-card checks | Auto-approved after ~20 seconds | Verifier integration |
+| Listing review | Auto-approved after ~25 seconds | Manual review in admin |
+
+Everything above is controlled by `settings.demo_mode`, toggleable from the admin
+panel — the UI and database behave identically when real providers are plugged in.
+
+## Money rules
+
+All of these run inside `SECURITY DEFINER` SQL functions, so a modified client cannot
+skip them:
+
+- The balance **is** `sum(ledger.amount_kobo)` — there is no balance column to edit.
+- Numbers are priced at provider cost × country multiplier × **40 % markup**.
+- Marketplace purchases deduct a **7 % account fee** before the seller payout.
+- Withdrawals cost a flat **₦50** and are rejected if balance < amount + fee.
+- Task rewards are held when the task is posted and released only on approval.
+- Direct inserts/updates on `ledger` are blocked by RLS for every client role.
+
+## Running locally
 
 ```sh
-cd app
+git clone https://github.com/Rapas11/abulo.git
+cd abulo/app
 npm install
-npx expo start          # scan the QR with Expo Go on Android
-npx expo start --web    # or open it in the browser
+npx expo start          # Expo Go or an emulator
+npx expo start --web    # browser at http://localhost:8081
 ```
 
-To preview a production build locally:
+A production web build:
 
 ```sh
 cd app
-npx expo export -p web  # static build into dist/
-node scripts/serve-dist.mjs   # serves dist/ at http://localhost:4173
+npx expo export -p web --output-dir dist
+node scripts/serve-dist.mjs        # http://localhost:4173
 ```
 
-## Backend (Supabase)
+### Building the Android APK
 
-The app is wired to the real Supabase project:
+The native project is generated on demand and is not committed:
 
-- URL: `https://wullpbyxutarkrmapxzx.supabase.co`
-- Publishable key is in `app/src/lib/supabase.ts` (safe to ship; override with
-  `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` if needed).
+```sh
+cd app
+npx expo prebuild -p android
+cd android
+./gradlew assembleRelease
+# app/build/outputs/apk/release/app-release.apk
+```
 
-**Status (19 Oct 2026):** this project is already provisioned — the schema is
-applied and “Confirm email” is off, so the first sign-up is immediately usable
-and becomes admin. The steps below are for a fresh project or after a reset.
-The publishable key cannot create tables by itself.
+If the APK crashes on an emulator with `libreactnative.so` missing, set
+`useLegacyPackaging = true` in `android/app/build.gradle` (the shipped APK uses it) and
+rebuild.
 
-One-time setup:
+## Repo layout
 
-1. Open **Supabase → SQL Editor**, paste `supabase/schema.sql`, and click **Run**.
-2. Open **Authentication → Sign In / Providers → Email** and turn **off**
-   “Confirm email” while testing. This makes a new account sign in immediately.
-   If you want the in-app 6-digit confirmation screen instead, keep it on and add
-   `{{ .Token }}` to the “Confirm signup” email template.
-3. Password reset by code needs `{{ .Token }}` in the “Reset password” template.
-   The Supabase default email only contains a link.
+```
+app/                 Expo app — Android + web
+  src/app/           expo-router routes (tabs, auth, wallet, numbers, tasks, giftcards, market, admin)
+  src/components/    shared UI (buttons, cards, sheets, inputs)
+  src/lib/           Supabase client, money helpers, session + PIN storage
+  src/theme.ts       design tokens: colours, type scale, radii, sizes
+supabase/schema.sql  full schema: tables, RLS, money functions, seed data
+site/                landing page source (published by GitHub Pages from docs/)
+docs/                generated site: landing page + static web export in docs/app/
+scripts/             site build and local static server
+design/              HTML mockups of the original five screens
+```
 
-What is real now:
+## Backend
 
-- Accounts, sessions and profiles (Supabase Auth + `profiles`).
-- Wallet ledger, deposits/withdrawals, numbers, tasks, gift cards, listing
-  purchases, seller payouts and the admin panel — all data lives in Postgres.
-- All money rules run in SQL functions; the app cannot write balances directly.
-- Smoke-tested against this project: sign-up/PIN, deposit, number purchase and
-  SMS, gift-card payout, task approval, admin panel, and blocked direct ledger
-  writes.
+The demo project is provisioned at
+`https://wullpbyxutarkrmapxzx.supabase.co`; the publishable key is in
+`app/src/lib/supabase.ts` and is safe to ship. To point the app at your own project,
+set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 
-Still simulated until provider keys arrive:
+Fresh setup:
 
-- Paystack deposits/withdrawals (`deposit_demo`, `withdraw_money` move ledger
-  money, no real bank transfer).
-- 5sim SMS delivery (~9 seconds).
-- Gift-card verification (auto-approved after 20 seconds) and listing review
-  (auto-approved after 25 seconds). Both are controlled by `settings.demo_mode`.
+1. **SQL Editor →** paste `supabase/schema.sql` → **Run**.
+2. **Authentication → Sign In / Providers → Email →** turn **off** “Confirm email”
+   for instant sign-in, or keep it on and add `{{ .Token }}` to the “Confirm signup”
+   template to use the in-app 6-digit screen.
+3. Add `{{ .Token }}` to the “Reset password” template so password reset by code works.
+4. First sign-up becomes admin (`profiles.role = 'admin'`).
 
-## Trying the app
+## Deployment
 
-Create an account with any valid email. Email confirmation is off on the current
-test project, so no inbox step is needed; the first account becomes the admin,
-so the “Admin panel” entry appears under Profile. Use the Deposit button to add
-demo funds before buying numbers, gift cards, accounts or posting tasks.
+`site/` is the hand-written landing page. `docs/` is what GitHub Pages publishes:
+the landing page plus the Expo static export mounted at `/app/`.
 
-By design, reopening the app asks for your 6-digit PIN. The PIN is a local
-device lock stored hashed in AsyncStorage; the account itself is in Supabase.
+```sh
+SITE_BASE=/abulo \
+SITE_URL=https://rapas11.github.io/abulo/ \
+REPO_URL=https://github.com/Rapas11/abulo \
+node scripts/build-site.mjs     # writes docs/
+node scripts/serve-site.mjs     # preview at http://localhost:4173/abulo/
+```
 
-## Known issues
+`scripts/serve-site.mjs` emulates the Pages subpath, so the preview matches production.
+GitHub Pages serves the `docs/` folder on `main`; the export is path-prefixed
+(`/abulo/app`), so the web app works from a project subpath. If the repository is
+renamed, rebuild with the new `SITE_BASE` and push.
 
-- Web (static build): a hydration console warning fires once on load (`Minified React error #418`).
-  The page redraws itself in milliseconds and is unaffected, and Android has no hydration at all.
-  Revisit when polishing the web version.
+## Project status
 
-## Sprint progress
+- [x] Sprints 0–8 — foundation, auth, wallet, withdrawals, numbers, tasks, gift cards,
+      accounts marketplace, admin panel
+- [x] Web export, Android APK, landing page, Pages deployment
+- [ ] Real Paystack keys (deposits, withdrawals, webhooks)
+- [ ] Real 5sim key (SMS delivery)
+- [ ] Release-signed APK / Play Store listing
+- [ ] Web hydration warning cleanup (`Minified React error #418` on first paint)
 
-- [x] Sprint 0 — foundation: repo, theme tokens, five-tab shell, empty states
-- [x] Sprint 1 — auth: sign up, email verify, PIN setup/unlock, reset password, profile
-- [x] Sprint 2 — wallet + deposits (ledger, server-side money rules, demo Paystack)
-- [x] Sprint 3 — withdrawals (bank, fees, limits, confirm sheet)
-- [x] Sprint 4 — numbers (catalog, buy flow, code inbox, auto refund)
-- [x] Sprint 5 — tasks (create, proof, review, rewards)
-- [x] Sprint 6 — gift cards (rates, submit, review, payout)
-- [x] Sprint 7 — accounts marketplace (listings, buy, seller payout, purchases)
-- [x] Sprint 8 — admin panel (tasks, approvals, orders, settings)
-- [ ] Sprint 9 — web export + Android release + real Paystack/5sim keys
+## Notes and limits
 
-Rules that never change: money moves only on the server, the balance is the sum of the
-ledger, and every spend ends with a confirm sheet that repeats the amount.
+- The APK is debug-signed. Treat it as a test build, not a store release.
+- The Supabase publishable key is public by design; RLS and SQL functions enforce
+  access. Never add a `service_role` key to the app.
+- Demo money is not real money. Nothing in the current build touches a payment
+  provider.
+
+## License
+
+MIT — see [app/LICENSE](app/LICENSE).

@@ -58,6 +58,42 @@ async function exportWeb() {
     cwd: appDir,
     env: { ...process.env, EXPO_BASE_URL: `${base}/app`, CI: '1' },
   });
+
+  await moveNodeModulesAssets();
+}
+
+/**
+ * Expo emits bundled fonts and images under assets/node_modules/..., a folder
+ * name that git ignores and GitHub Pages refuses to serve. Rename it and fix the
+ * URLs baked into the bundle.
+ */
+async function moveNodeModulesAssets() {
+  const assetsDir = join(appOut, 'assets');
+  const from = join(assetsDir, 'node_modules');
+  if (!existsSync(from)) return;
+
+  await cp(from, join(assetsDir, 'vendor'), { recursive: true });
+  await rm(from, { recursive: true, force: true });
+  console.log('▸ Moved bundled assets out of assets/node_modules → assets/vendor');
+
+  const files = [];
+  const walk = async (dir) => {
+    for (const entry of await readdir(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (/\.(js|css|html|json)$/.test(entry.name)) files.push(full);
+    }
+  };
+  await walk(appOut);
+
+  let patched = 0;
+  for (const file of files) {
+    const source = await readFile(file, 'utf8');
+    if (!source.includes('/assets/node_modules/')) continue;
+    await writeFile(file, source.replaceAll('/assets/node_modules/', '/assets/vendor/'));
+    patched += 1;
+  }
+  console.log(`▸ Rewrote asset URLs in ${patched} file(s)`);
 }
 
 async function rewriteHtml(dir) {

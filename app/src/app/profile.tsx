@@ -7,22 +7,21 @@ import { Screen } from '@/components/Screen';
 import { ErrorText, TextField } from '@/components/fields';
 import { EntryCard, MainButton, SectionHeader } from '@/components/kit';
 import { useAuth } from '@/lib/auth-context';
+import { unreadCount, useDb } from '@/lib/db';
+import { initialsOf } from '@/lib/format';
 import { colors, typography } from '@/theme';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, updateName, signOut } = useAuth();
+  const { user, updateName, signOut, lock } = useAuth();
+  const db = useDb();
   const [name, setName] = useState(user?.name ?? '');
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const initials = (user?.name ?? '')
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
+  const initials = initialsOf(user?.name ?? '');
+  const unread = unreadCount(db);
 
   const save = async () => {
     if (busy) return;
@@ -75,6 +74,23 @@ export default function ProfileScreen() {
         title="Change PIN"
         subtitle="Update your 6-digit unlock code"
         onPress={() => router.push('/pin-change')}
+      />
+      {user?.hasPin ? (
+        <EntryCard
+          icon="lock-closed-outline"
+          title="Lock app"
+          subtitle="Ask for the PIN before the app can be used"
+          onPress={lock}
+        />
+      ) : null}
+
+      <SectionHeader title="Activity" />
+      <EntryCard
+        icon="notifications-outline"
+        title="Notifications"
+        subtitle="Deposits, orders, approvals and payouts"
+        badge={unread ? String(unread) : undefined}
+        onPress={() => router.push('/notifications')}
       />
 
       {user?.role === 'admin' ? (

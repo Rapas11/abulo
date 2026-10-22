@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Screen } from '@/components/Screen';
 import { Chip, EmptyState, SectionHeader, StatusPill } from '@/components/kit';
-import { COUNTRIES, SERVICES, numberPriceKobo } from '@/lib/catalog';
+import { numberPriceKobo } from '@/lib/catalog';
 import { useAuth } from '@/lib/auth-context';
 import { useDb } from '@/lib/db';
 import { formatDate } from '@/lib/format';
@@ -17,7 +17,7 @@ export default function NumbersScreen() {
   const { user } = useAuth();
   const db = useDb();
   const [countryCode, setCountryCode] = useState('ng');
-  const country = COUNTRIES.find((item) => item.code === countryCode) ?? COUNTRIES[0];
+  const country = db.countries.find((item) => item.code === countryCode) ?? db.countries[0];
   const orders = user ? db.numberOrders.filter((order) => order.userId === user.id).slice(0, 3) : [];
 
   return (
@@ -28,7 +28,7 @@ export default function NumbersScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.countries}>
-        {COUNTRIES.map((item) => (
+        {db.countries.map((item) => (
           <Chip
             key={item.code}
             label={`${item.flag} ${item.name}`}
@@ -39,7 +39,7 @@ export default function NumbersScreen() {
       </ScrollView>
 
       <View style={styles.list}>
-        {SERVICES.map((service) => (
+        {db.services.map((service) => (
           <Pressable
             key={service.id}
             onPress={() =>

@@ -6,7 +6,7 @@
     <title>Abulo — one wallet, four marketplaces</title>
     <meta
       name="description"
-      content="Abulo is a dark-mode wallet app with four marketplaces: virtual numbers, verified accounts, gift cards and paid tasks. Try the web app or download the Android APK."
+      content="Abulo is a dark-mode wallet with four marketplaces: virtual numbers, verified accounts, gift cards and paid tasks. One balance, one PIN."
     />
     <meta name="theme-color" content="#0e0e0f" />
     <link rel="icon" href="assets/icon.png" />
@@ -16,7 +16,7 @@
     <meta property="og:title" content="Abulo — one wallet, four marketplaces" />
     <meta
       property="og:description"
-      content="Virtual numbers, accounts, gift cards and paid tasks in one dark-mode wallet. Web app + Android APK."
+      content="Virtual numbers, accounts, gift cards and paid tasks in one dark-mode wallet."
     />
     <meta property="og:image" content="https://rapas11.github.io/abulo/assets/screen-sign-in.png" />
     <meta property="og:url" content="https://rapas11.github.io/abulo/" />
@@ -32,83 +32,50 @@
         <nav class="nav" aria-label="Sections">
           <a href="#features">Features</a>
           <a href="#how">How it works</a>
-          <a href="#download">Download</a>
-          <a href="https://github.com/Rapas11/abulo">Source</a>
         </nav>
-        <a class="btn btn-primary btn-sm" href="#download">Get the app</a>
+        <div class="header-actions">
+          <a class="btn btn-ghost btn-sm" href="/abulo/app/auth/sign-up">Create account</a>
+          <a class="btn btn-primary btn-sm" href="/abulo/app/auth/sign-in">Log in</a>
+        </div>
       </div>
     </header>
 
     <main>
       <section class="hero">
-        <div class="wrap">
-          <div>
-            <span class="eyebrow"><span class="dot"></span> v0.1.0 · web + Android</span>
-            <h1>One wallet.<br />Four <em>marketplaces</em>.</h1>
-            <p class="lede">
-              Buy virtual numbers, verified accounts and gift cards, or earn by completing
-              paid tasks. One balance, one PIN, one dark interface that stays out of your way.
-            </p>
-            <div class="hero-actions">
-              <a class="btn btn-primary" href="app/">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8" />
-                  <path d="M3.5 12h17M12 3.2c2.6 2.4 4 5.6 4 8.8s-1.4 6.4-4 8.8c-2.6-2.4-4-5.6-4-8.8s1.4-6.4 4-8.8Z" stroke="currentColor" stroke-width="1.6" />
-                </svg>
-                Open the web app
-              </a>
-              <a class="btn btn-ghost" href="#download">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M12 3v11m0 0 4-4m-4 4-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                  <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-                </svg>
-                Download APK
-              </a>
-            </div>
-            <div class="meta">
-              <span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                No install needed on web
-              </span>
-              <span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <rect x="6" y="3" width="12" height="18" rx="3" stroke="currentColor" stroke-width="1.7" />
-                  <path d="M11 18h2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-                </svg>
-                Android 7.0+ · ARM
-              </span>
-              <span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M12 3l7 3v6c0 4.2-2.9 7.6-7 9-4.1-1.4-7-4.8-7-9V6l7-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
-                </svg>
-                Server-side money rules
-              </span>
-            </div>
+        <div class="wrap hero-center">
+          <span class="eyebrow"><span class="dot"></span> Live on web and Android</span>
+          <h1>One wallet.<br />Four <em>marketplaces</em>.</h1>
+          <p class="lede">
+            Buy virtual numbers, verified accounts and gift cards, or earn by completing paid
+            tasks. One balance, one PIN, one dark interface that stays out of your way.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="/abulo/app/auth/sign-in">Log in</a>
+            <a class="btn btn-ghost" href="/abulo/app/auth/sign-up">Create account</a>
           </div>
-
-          <div class="phone-stage">
-            <div class="phone">
-              <img
-                src="assets/screen-sign-in.png"
-                alt="Abulo sign-in screen: dark background, orange Abulo wordmark, email and password fields, orange Sign in button"
-                width="620"
-                height="1102"
-              />
-            </div>
+          <div class="meta">
+            <span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              Opens full screen in any browser
+            </span>
+            <span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 3l7 3.5v5c0 4.4-3 8.1-7 9.5-4-1.4-7-5.1-7-9.5v-5L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+              </svg>
+              Your PIN is required for every payment
+            </span>
+            <span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7" />
+                <path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+              </svg>
+              One account on web and Android
+            </span>
           </div>
         </div>
       </section>
-
-      <div class="strip">
-        <div class="wrap">
-          <div class="stat"><strong>5 tabs</strong><span>Home, numbers, tasks, gift cards, wallet</span></div>
-          <div class="stat"><strong>1 balance</strong><span>Every purchase and payout in one ledger</span></div>
-          <div class="stat"><strong>0 light mode</strong><span>Dark by design, single orange accent</span></div>
-          <div class="stat"><strong>100% server</strong><span>Clients never write balances</span></div>
-        </div>
-      </div>
 
       <section id="features">
         <div class="wrap">
@@ -133,7 +100,7 @@
               <p>Pick a service, pick a country, get a number and read the code in-app.</p>
               <ul>
                 <li>Service and country catalogue with live prices</li>
-                <li>Code inbox with countdown and auto refund</li>
+                <li>Code inbox with one-tap copy and auto refund</li>
                 <li>Order history kept per account</li>
               </ul>
             </article>
@@ -210,12 +177,12 @@
                   <path d="M9.2 12.2l2 2 3.6-3.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </div>
-              <h3>Admin panel</h3>
-              <p>The first account becomes admin and gets review, order and settings screens.</p>
+              <h3>Money rules on the server</h3>
+              <p>Balances, fees and prices are decided by the backend — never by the browser.</p>
               <ul>
-                <li>Task, gift-card and listing approvals</li>
-                <li>Order lookup across all marketplaces</li>
-                <li>Markup, fees and demo mode toggles</li>
+                <li>Every payment needs your PIN</li>
+                <li>Prices quoted by the server at confirm time</li>
+                <li>Full notification trail for every event</li>
               </ul>
             </article>
           </div>
@@ -225,95 +192,40 @@
       <section id="how">
         <div class="wrap">
           <div class="section-head">
-            <span class="kicker">Try it</span>
-            <h2>Three minutes from zero to a demo wallet.</h2>
-            <p>
-              The current build runs on a live Supabase project with test funds, so you can walk
-              the whole product without a payment provider.
-            </p>
+            <span class="kicker">Getting started</span>
+            <h2>Three minutes from zero to a working wallet.</h2>
+            <p>Sign in from any device — the browser and the Android app share one account.</p>
           </div>
 
           <div class="steps">
             <div class="step">
               <h3>Create an account</h3>
               <p>
-                Use any valid email and a password. Email confirmation is off on the test project,
-                so there is no inbox step — set a 6-digit PIN and you are in.
+                Use any valid email and a password, then set the 6-digit PIN that will
+                protect every payment you make.
               </p>
             </div>
             <div class="step">
-              <h3>Add demo funds</h3>
+              <h3>Top up your wallet</h3>
               <p>
-                Open the wallet and tap Deposit. Deposits move ledger money instantly; no real
-                charge is made while Paystack keys are absent.
+                Open the wallet and tap Deposit. Your balance and full transaction history
+                live in one place.
               </p>
             </div>
             <div class="step">
               <h3>Buy, sell, earn</h3>
               <p>
-                Grab a number, submit a gift card, post a task or list an account. Every flow ends
-                with a confirm sheet that repeats the exact amount.
+                Grab a number, submit a gift card, post a task or list an account. Every
+                flow ends with a confirm sheet that repeats the exact amount.
               </p>
             </div>
           </div>
 
           <div class="note">
-            <strong>Demo mode is on.</strong> Paystack deposits and withdrawals, 5sim SMS
-            delivery, gift-card checks and listing review are simulated until provider keys are
-            added. Balances, accounts, orders and admin controls are real and stored in Postgres.
-          </div>
-        </div>
-      </section>
-
-      <section id="download" class="download">
-        <div class="wrap">
-          <div class="section-head">
-            <span class="kicker">Get Abulo</span>
-            <h2>Use it in the browser or install the APK.</h2>
-            <p>Both run the same code. The APK simply adds an icon on your home screen.</p>
-          </div>
-
-          <div class="dl-grid">
-            <article class="dl-card accent">
-              <h3>Android APK</h3>
-              <p>
-                Side-load the current build. Android will ask you to allow installs from your
-                browser the first time.
-              </p>
-              <a class="btn btn-primary" href="https://github.com/Rapas11/abulo/releases/download/v0.1.0/abulo-0.1.0.apk" rel="noopener">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M12 3v11m0 0 4-4m-4 4-4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                  <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-                </svg>
-                Download APK
-              </a>
-              <div class="file-facts">
-                <span class="chip">abulo-0.1.0.apk · 26.7 MB</span>
-                <span class="chip">com.abulo.app</span>
-                <span class="chip">arm64-v8a · armeabi-v7a</span>
-                <span class="chip">debug-signed</span>
-              </div>
-            </article>
-
-            <article class="dl-card">
-              <h3>Web app</h3>
-              <p>
-                Nothing to install. Opens in any modern browser and keeps the same phone-width
-                layout on desktop.
-              </p>
-              <a class="btn btn-ghost" href="app/">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8" />
-                  <path d="M3.5 12h17M12 3.2c2.6 2.4 4 5.6 4 8.8s-1.4 6.4-4 8.8c-2.6-2.4-4-5.6-4-8.8s1.4-6.4 4-8.8Z" stroke="currentColor" stroke-width="1.6" />
-                </svg>
-                Launch the web app
-              </a>
-              <div class="file-facts">
-                <span class="chip">static export</span>
-                <span class="chip">no account needed to view</span>
-                <span class="chip">same Supabase backend</span>
-              </div>
-            </article>
+            <strong>Public beta.</strong> Deposits and withdrawals, SMS delivery,
+            gift-card checks and listing review run on test providers while the final
+            service keys are being connected. Accounts, balances, orders and every
+            money rule are real and stored on the server.
           </div>
         </div>
       </section>
@@ -325,11 +237,11 @@
           <img src="assets/icon.png" alt="" width="26" height="26" style="border-radius: 8px" />
           <span>Abulo</span>
         </a>
-        <span>Built with Expo, React Native and Supabase.</span>
+        <span>© 2026 Abulo. All rights reserved.</span>
         <span class="footer-spacer"></span>
-        <a href="https://github.com/Rapas11/abulo">Source code</a>
-        <a href="https://github.com/Rapas11/abulo/blob/main/README.md">Documentation</a>
-        <a href="https://github.com/Rapas11/abulo/issues">Report an issue</a>
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="/abulo/app/auth/sign-in">Log in</a>
       </div>
     </footer>
   </body>

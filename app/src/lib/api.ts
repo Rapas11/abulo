@@ -6,11 +6,15 @@
  * money directly. Every action refreshes the local mirror afterwards.
  */
 import { getDb, loadDb, type Task } from './db';
+import {
+  cardVerifier,
+  listingModerator,
+  paymentProvider,
+  smsProvider,
+} from './providers';
 import { getSupabase } from './supabase';
 
 export type ApiResult<T = null> = { ok: true; data: T } | { ok: false; error: string };
-
-const OK: ApiResult = { ok: true, data: null };
 
 function friendlyError(message: string | undefined, fallback: string): string {
   const text = (message ?? '').toLowerCase();
@@ -33,10 +37,27 @@ async function callRpc<T>(
   return { ok: true, data: data as T };
 }
 
+/** True when Postgres does not know this function yet (migration not applied). */
+function isMissingFunction(message: string | undefined): boolean {
+  const text = (message ?? '').toLowerCase();
+  return (
+    text.includes('does not exist') ||
+    text.includes('could not find the function') ||
+    text.includes('pgrst202') ||
+    text.includes('function public.') && text.includes('not found')
+  );
+}
+
 // ---------------------------------------------------------------- wallet
 
 export async function deposit(amountKobo: number): Promise<ApiResult> {
-  return callRpc('deposit_demo', { p_amount_kobo: amountKobo });
+  try {
+    await paymentProvider.startDeposit(amountKobo);
+  } catch (error) {
+    return { ok: false, error: friendlyError((error as Error).message, 'Deposit failed.') };
+  }
+  await loadDb();
+  return { ok: true, data: null };
 }
 
 export async function withdraw(
@@ -45,12 +66,32 @@ export async function withdraw(
   accountNumber: string,
   accountName: string,
 ): Promise<ApiResult> {
-  return callRpc('withdraw_money', {
+  // 1. Debit the wallet first — the server owns the money, so it cannot be
+  //    spent twice while a transfer is in flight.
+  const result = await callRpc('withdraw_money', {
     p_amount_kobo: amountKobo,
     p_bank: bankName,
     p_account_number: accountNumber,
     p_account_name: accountName,
   });
+  if (!result.ok) return result;
+
+  // 2. Hand the transfer to the payment provider. The simulated provider is a
+  //    no-op (the ledger row is the record); a real one calls the bank API and
+  //    settles on the webhook.
+  try {
+    await paymentProvider.sendPayout({
+      amountKobo,
+      bank: bankName,
+      accountNumber,
+      accountName,
+    });
+  } catch (error) {
+    return { ok: false, error: friendlyError((error as Error).message, 'Payout failed.') };
+  }
+
+  await loadDb();
+  return { ok: true, data: null };
 }
 
 // --------------------------------------------------------------- numbers
@@ -67,16 +108,21 @@ export async function buyNumber(
   return { ok: true, data: { id: result.data.id } };
 }
 
-/** Asks the server to deliver the demo SMS once ~9 seconds have passed. */
+/**
+ * Asks the SMS provider to deliver the code once ~9 seconds have passed.
+ * The provider decides whether that is a real SMS or the simulated one.
+ */
 export async function checkNumberOrder(orderId: string): Promise<void> {
   const order = getDb().numberOrders.find((item) => item.id === orderId);
   if (!order || order.status !== 'waiting') return;
   if (Date.now() - order.createdAt < 9000) return;
 
-  const { data, error } = await getSupabase().rpc('simulate_sms', { p_order_id: orderId });
-  if (!error && data && (data as { status?: string }).status === 'received') {
-    await loadDb();
+  try {
+    await smsProvider.deliver(orderId);
+  } catch {
+    return;
   }
+  await loadDb();
 }
 
 export async function cancelNumber(orderId: string): Promise<ApiResult> {
@@ -142,18 +188,18 @@ export async function reviewGiftCard(orderId: string, approve: boolean): Promise
   });
 }
 
-/** Demo verification: auto-approves the user's card 20 seconds after upload. */
+/** Asks the card verifier to check the card (simulated: auto-approve). */
 export async function pollGiftCard(orderId: string): Promise<void> {
   const order = getDb().giftCards.find((item) => item.id === orderId);
   if (!order || order.status !== 'pending') return;
   if (Date.now() - order.createdAt < 20000) return;
 
-  const { data, error } = await getSupabase().rpc('simulate_gift_card_review', {
-    p_order_id: orderId,
-  });
-  if (!error && data && (data as { status?: string }).status !== 'pending') {
-    await loadDb();
+  try {
+    await cardVerifier.verify(orderId);
+  } catch {
+    return;
   }
+  await loadDb();
 }
 
 // --------------------------------------------------------------- accounts
@@ -181,18 +227,18 @@ export async function reviewListing(listingId: string, approve: boolean): Promis
   });
 }
 
-/** Demo review: listings go live 25 seconds after posting. */
+/** Asks the moderator to review a listing (simulated: auto-approve). */
 export async function pollListing(listingId: string): Promise<void> {
   const listing = getDb().listings.find((item) => item.id === listingId);
   if (!listing || listing.status !== 'pending') return;
   if (Date.now() - listing.createdAt < 25000) return;
 
-  const { data, error } = await getSupabase().rpc('simulate_listing_review', {
-    p_listing_id: listingId,
-  });
-  if (!error && data && (data as { status?: string }).status === 'active') {
-    await loadDb();
+  try {
+    await listingModerator.review(listingId);
+  } catch {
+    return;
   }
+  await loadDb();
 }
 
 export async function buyListing(
@@ -211,12 +257,121 @@ export async function updateSettings(settings: {
   numbersMarkupPct: number;
   accountFeePct: number;
   withdrawalFeeKobo: number;
+  demoMode?: boolean;
 }): Promise<ApiResult> {
-  return callRpc('admin_update_settings', {
+  const args: Record<string, unknown> = {
     p_markup: settings.numbersMarkupPct,
     p_fee: settings.accountFeePct,
     p_withdrawal_fee_kobo: settings.withdrawalFeeKobo,
-  });
+  };
+  if (settings.demoMode !== undefined) args.p_demo_mode = settings.demoMode;
+
+  const { data, error } = await getSupabase().rpc('admin_update_settings', args);
+  if (error) {
+    // The project may still run the three-argument version of the function.
+    if (settings.demoMode !== undefined && isMissingFunction(error.message)) {
+      const legacy = await getSupabase().rpc('admin_update_settings', {
+        p_markup: settings.numbersMarkupPct,
+        p_fee: settings.accountFeePct,
+        p_withdrawal_fee_kobo: settings.withdrawalFeeKobo,
+      });
+      if (legacy.error) {
+        return { ok: false, error: friendlyError(legacy.error.message, 'Could not save settings.') };
+      }
+      await loadDb();
+      return {
+        ok: false,
+        error: 'Saved. Demo mode needs the database update (run the latest migration).',
+      };
+    }
+    return { ok: false, error: friendlyError(error.message, 'Could not save settings.') };
+  }
+
+  await loadDb();
+  return { ok: true, data: (data ?? null) as null };
 }
 
-export const apiOk = OK;
+// ----------------------------------------------------------- notifications
+
+/** Marks every unread notification of this user as read. */
+export async function markNotificationsRead(): Promise<ApiResult> {
+  const { error } = await getSupabase().rpc('mark_notifications_read');
+  if (error) {
+    if (isMissingFunction(error.message)) return { ok: true, data: null };
+    return { ok: false, error: friendlyError(error.message, 'Could not update notifications.') };
+  }
+  await loadDb();
+  return { ok: true, data: null };
+}
+
+// ----------------------------------------------------------------- quotes
+
+/**
+ * The exact price the server will charge for a number.
+ * Falls back to null when the quote function is not deployed yet.
+ */
+export async function quoteNumberPrice(
+  countryCode: string,
+  serviceId: string,
+): Promise<number | null> {
+  const { data, error } = await getSupabase().rpc('quote_number_price', {
+    p_country_code: countryCode,
+    p_service_id: serviceId,
+  });
+  if (error) return null;
+  const value = Number(data);
+  return Number.isFinite(value) ? value : null;
+}
+
+/** The exact payout the server will credit for a gift card. */
+export async function quoteGiftCardPayout(
+  brandId: string,
+  faceValueUsd: number,
+): Promise<number | null> {
+  const { data, error } = await getSupabase().rpc('quote_gift_card_payout', {
+    p_brand_id: brandId,
+    p_face_value_usd: faceValueUsd,
+  });
+  if (error) return null;
+  const value = Number(data);
+  return Number.isFinite(value) ? value : null;
+}
+
+// --------------------------------------------------------- password reset
+
+/**
+ * Requests a password reset code. In demo mode the code comes back so it can
+ * be shown on screen; later an email sender takes over and this returns ''.
+ */
+export async function requestResetCode(email: string): Promise<ApiResult<string>> {
+  const { data, error } = await getSupabase().rpc('request_reset_code', {
+    p_email: email.trim().toLowerCase(),
+  });
+  if (error) {
+    if (isMissingFunction(error.message)) {
+      return { ok: false, error: 'Password reset needs the latest database update.' };
+    }
+    return { ok: false, error: friendlyError(error.message, 'Could not request a code.') };
+  }
+  return { ok: true, data: String(data ?? '') };
+}
+
+/** Sets a new password with the code from requestResetCode. */
+export async function resetPasswordWithCode(
+  email: string,
+  code: string,
+  newPassword: string,
+): Promise<ApiResult> {
+  const { data, error } = await getSupabase().rpc('reset_password_with_code', {
+    p_email: email.trim().toLowerCase(),
+    p_code: code.trim(),
+    p_new_password: newPassword,
+  });
+  if (error) {
+    if (isMissingFunction(error.message)) {
+      return { ok: false, error: 'Password reset needs the latest database update.' };
+    }
+    return { ok: false, error: friendlyError(error.message, 'Could not reset the password.') };
+  }
+  return { ok: true, data: (data ?? true) as null };
+}

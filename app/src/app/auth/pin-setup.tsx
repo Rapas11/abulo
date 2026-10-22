@@ -10,7 +10,7 @@ export default function PinSetupScreen() {
       <View style={styles.hero}>
         <Text style={styles.title}>Create your PIN</Text>
         <Text style={styles.caption}>
-          You will use it to unlock Abulo and approve every money move.
+          You will use it to approve every money move. It stays on this device.
         </Text>
       </View>
       <PinCreateFlow />

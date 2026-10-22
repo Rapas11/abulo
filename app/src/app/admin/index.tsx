@@ -28,12 +28,13 @@ export default function AdminHomeScreen() {
   const pendingCards = db.giftCards.filter((card) => card.status === 'pending').length;
   const pendingListings = db.listings.filter((listing) => listing.status === 'pending').length;
   const pending = pendingTasks + pendingCards + pendingListings;
+  const soldNumbers = db.numberOrders.filter((order) => order.status !== 'cancelled').length;
 
   return (
     <AdminShell title="Admin">
       <Card style={styles.stats}>
         <Stat value={String(users.length)} label="Users" />
-        <Stat value={String(db.numberOrders.length)} label="Numbers sold" />
+        <Stat value={String(soldNumbers)} label="Numbers sold" />
         <Stat value={String(pending)} label="Pending" tone={pending ? 'warn' : 'muted'} />
       </Card>
 

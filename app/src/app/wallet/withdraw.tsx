@@ -61,8 +61,9 @@ export default function WithdrawScreen() {
         { label: 'Bank', value: `${bank} · ${accountNumber.slice(-4)}` },
         { label: 'Account name', value: accountName.trim() },
       ],
-      note: 'Demo payout — no real bank transfer is made.',
+      note: db.settings.demoMode ? 'Demo payout — no real bank transfer is made.' : undefined,
       confirmLabel: 'Withdraw',
+      requirePin: true,
     });
     if (!approved) return;
 
@@ -83,7 +84,8 @@ export default function WithdrawScreen() {
           <Text style={styles.centerTitle}>Withdrawal sent</Text>
           <Text style={styles.bigAmount}>{formatNaira(paidKobo)}</Text>
           <Text style={styles.centerCaption}>
-            {bank} · {accountNumber.slice(-4)} — demo payout, no real transfer.
+            {bank} · {accountNumber.slice(-4)}
+            {db.settings.demoMode ? ' — demo payout, no real transfer.' : '.'}
           </Text>
         </View>
         <MainButton label="Done" onPress={() => router.back()} />
@@ -93,7 +95,9 @@ export default function WithdrawScreen() {
 
   return (
     <Screen title="Withdraw" back>
-      <FormNotice>Demo mode — no real bank transfer is made.</FormNotice>
+      {db.settings.demoMode ? (
+        <FormNotice>Demo mode — no real bank transfer is made.</FormNotice>
+      ) : null}
 
       <View style={styles.form}>
         <TextField

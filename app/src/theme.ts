@@ -55,8 +55,6 @@ export const layout = {
   cardGap: 12,
   cardPadding: 14,
   headerHeight: 56,
-  /** Caps content width so wide screens (web/tablet) keep the phone layout. */
-  contentMaxWidth: 480,
 } as const;
 
 export const radius = {

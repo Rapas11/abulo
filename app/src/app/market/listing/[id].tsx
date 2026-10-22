@@ -50,6 +50,7 @@ export default function ListingScreen() {
       ],
       note: `A ${db.settings.accountFeePct}% fee goes to Abulo; the seller receives the rest.`,
       confirmLabel: 'Pay and get details',
+      requirePin: true,
     });
     if (!approved) return;
     setBusy(true);
@@ -108,7 +109,9 @@ export default function ListingScreen() {
       {isMine ? (
         <Card style={styles.noteCard}>
           <Text style={styles.noteText}>
-            This is your listing. It goes live after review (auto-approved in demo).
+            {db.settings.demoMode
+              ? 'This is your listing. It goes live after review (auto-approved in demo).'
+              : 'This is your listing. It goes live once it is approved.'}
           </Text>
         </Card>
       ) : null}

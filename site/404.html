@@ -6,7 +6,7 @@
     <title>Page not found — Abulo</title>
     <meta name="robots" content="noindex" />
     <meta name="theme-color" content="#0e0e0f" />
-    <link rel="icon" href="/__BASE__/assets/icon.png" />
+    <link rel="icon" href="__BASE__/assets/icon.png" />
     <style>
       :root { color-scheme: dark; }
       * { box-sizing: border-box; }
@@ -54,15 +54,22 @@
         the web app.
       </p>
       <div class="row">
-        <a class="primary" href="/__BASE__/">Back to Abulo</a>
-        <a class="ghost" href="/__BASE__/app/">Open the web app</a>
+        <a class="primary" href="__BASE__/">Back to Abulo</a>
+        <a class="ghost" href="__BASE__/app/">Open the web app</a>
       </div>
     </main>
     <script>
       // A deep link inside the app that the host could not resolve: boot the app
-      // at its root instead of dead-ending here.
+      // at its root instead of dead-ending here. The original path is kept so
+      // the app can go straight back to it (static hosts have no fallback).
       if (location.pathname.indexOf('/app/') !== -1) {
-        location.replace('/__BASE__/app/');
+        try {
+          sessionStorage.setItem(
+            'abulo:deep-link',
+            location.pathname + location.search + location.hash,
+          );
+        } catch (e) {}
+        location.replace('__BASE__/app/');
       }
     </script>
   </body>

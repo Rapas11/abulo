@@ -964,6 +964,9 @@ revoke insert, update, delete on public.gift_cards from anon, authenticated;
 revoke insert, update, delete on public.listings from anon, authenticated;
 
 -- ============================================================================
--- DONE. Next: Authentication → Providers → Email → turn OFF "Confirm email"
+-- DONE with the base schema. Then run the upgrades in supabase/migrations/ in
+-- date order — 2026-10-22_real.sql adds notifications, server quotes, the
+-- demo-mode switch and password reset codes.
+-- Next: Authentication → Providers → Email → turn OFF "Confirm email"
 -- while testing, so a new account signs in immediately.
 -- ============================================================================

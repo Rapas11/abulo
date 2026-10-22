@@ -25,7 +25,7 @@ export function SectionHeader({
   return (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionTitle}>{title}</Text>
-      {action ? (
+      {action && onAction ? (
         <Pressable onPress={onAction} hitSlop={10} style={styles.sectionAction}>
           <Text style={styles.link}>{action}</Text>
         </Pressable>
@@ -238,7 +238,7 @@ export function EmptyState({
     <View style={styles.empty}>
       <Ionicons name={icon} size={size.emptyIcon} color={colors.disabled} />
       <Text style={styles.emptyTitle}>{title}</Text>
-      {actionLabel ? (
+      {actionLabel && onAction ? (
         <SmallButton label={actionLabel} variant={actionVariant} onPress={onAction} />
       ) : null}
     </View>
@@ -249,16 +249,19 @@ export function BalanceCard({
   balanceKobo,
   onDeposit,
   onWithdraw,
+  loading,
 }: {
   balanceKobo: number;
   onDeposit?: () => void;
   onWithdraw?: () => void;
+  /** Shows a placeholder instead of an amount while the wallet loads. */
+  loading?: boolean;
 }) {
   return (
     <View style={styles.balanceCard}>
       <View>
         <Text style={styles.balanceLabel}>Wallet balance</Text>
-        <Text style={styles.balanceAmount}>{formatNaira(balanceKobo)}</Text>
+        <Text style={styles.balanceAmount}>{loading ? '—' : formatNaira(balanceKobo)}</Text>
       </View>
       <View style={styles.balanceActions}>
         <SmallButton
@@ -290,7 +293,11 @@ export function EntryCard({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.entry, pressed && { backgroundColor: colors.pressed }]}>
+      disabled={!onPress}
+      style={({ pressed }) => [
+        styles.entry,
+        pressed && onPress ? { backgroundColor: colors.pressed } : null,
+      ]}>
       <IconCircle name={icon} />
       <View style={styles.flex1}>
         <Text style={styles.entryTitle}>{title}</Text>
@@ -301,7 +308,7 @@ export function EntryCard({
           <Text style={styles.entryBadgeText}>{badge}</Text>
         </View>
       ) : null}
-      <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
+      {onPress ? <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} /> : null}
     </Pressable>
   );
 }

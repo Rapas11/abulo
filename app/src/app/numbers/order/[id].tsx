@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { useConfirm } from '@/components/ConfirmSheet';
+import { CopyButton } from '@/components/CopyButton';
 import { Screen } from '@/components/Screen';
 import { ErrorText } from '@/components/fields';
 import { Card, EmptyState, InfoRow, SmallButton, StatusPill } from '@/components/kit';
@@ -74,7 +75,10 @@ export default function NumberOrderScreen() {
           />
         </View>
 
-        <Text style={styles.phone}>{order.phoneNumber}</Text>
+        <View style={styles.phoneRow}>
+          <Text style={styles.phone}>{order.phoneNumber}</Text>
+          <CopyButton value={order.phoneNumber} label="Copy number" />
+        </View>
         <InfoRow label="Paid" value={formatNaira(order.priceKobo)} />
       </Card>
 
@@ -83,7 +87,9 @@ export default function NumberOrderScreen() {
           <ActivityIndicator color={colors.accent} size="large" />
           <Text style={styles.statusTitle}>Waiting for SMS…</Text>
           <Text style={styles.statusCaption}>
-            In demo mode the code arrives in about 10 seconds. Keep this screen open.
+            {db.settings.demoMode
+              ? 'In demo mode the code arrives in about 10 seconds. Keep this screen open.'
+              : 'Waiting for the verification SMS. Keep this screen open.'}
           </Text>
           <SmallButton label="Cancel and refund" onPress={cancel} />
         </Card>
@@ -95,8 +101,12 @@ export default function NumberOrderScreen() {
             <Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.moneyIn} />
             <Text style={styles.smsTitle}>SMS received</Text>
           </View>
-          <Text style={styles.code}>{order.code}</Text>
+          <View style={styles.codeRow}>
+            <Text style={styles.code}>{order.code}</Text>
+            <CopyButton value={order.code ?? ''} label="Copy code" />
+          </View>
           <Text style={styles.message}>{order.message}</Text>
+          <CopyButton value={order.message ?? ''} label="Copy SMS text" />
           <Text style={styles.smsHint}>Paste this code in the {order.serviceName} app.</Text>
         </Card>
       ) : null}
@@ -114,8 +124,9 @@ export default function NumberOrderScreen() {
       {error ? <ErrorText>{error}</ErrorText> : null}
 
       <Text style={styles.footer}>
-        Numbers are provided by 5sim in production. This demo simulates the SMS so you can test the
-        whole flow.
+        {db.settings.demoMode
+          ? 'Numbers are provided by 5sim in production. This demo simulates the SMS so you can test the whole flow.'
+          : 'The number is yours until the order is cancelled or the code arrives.'}
       </Text>
     </Screen>
   );
@@ -126,14 +137,22 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 },
   service: { ...typography.sectionTitle, color: colors.text },
   country: { ...typography.caption, color: colors.textSecondary, marginTop: 2 },
-  phone: { ...typography.balance, fontSize: 24, color: colors.text, marginTop: 8 },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 8,
+  },
+  phone: { ...typography.balance, fontSize: 24, color: colors.text, flexShrink: 1 },
   statusCard: { alignItems: 'center', gap: 10, marginTop: 16, paddingVertical: 24 },
   statusTitle: { ...typography.sectionTitle, color: colors.text },
   statusCaption: { ...typography.caption, color: colors.textSecondary, textAlign: 'center', lineHeight: 18 },
   smsCard: { marginTop: 16, gap: 8, alignItems: 'center' },
   smsHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   smsTitle: { ...typography.body, fontWeight: '600', color: colors.moneyIn },
-  code: { ...typography.code, color: colors.text, marginTop: 6 },
+  codeRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 6 },
+  code: { ...typography.code, color: colors.text },
   message: { ...typography.body, color: colors.textSecondary, textAlign: 'center', lineHeight: 21 },
   smsHint: { ...typography.caption, color: colors.textSecondary },
   footer: { ...typography.caption, color: colors.disabled, lineHeight: 17, marginTop: 20 },

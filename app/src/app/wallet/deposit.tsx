@@ -7,6 +7,7 @@ import { Screen } from '@/components/Screen';
 import { ErrorText, FormNotice, TextField } from '@/components/fields';
 import { Chip, MainButton } from '@/components/kit';
 import { deposit } from '@/lib/api';
+import { useDb } from '@/lib/db';
 import { formatNaira } from '@/lib/money';
 import { colors, typography } from '@/theme';
 
@@ -14,6 +15,7 @@ const QUICK_AMOUNTS = [1000, 2000, 5000, 10000, 20000];
 
 export default function DepositScreen() {
   const router = useRouter();
+  const db = useDb();
   const [amount, setAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [stage, setStage] = useState<'form' | 'paying' | 'done'>('form');
@@ -65,7 +67,9 @@ export default function DepositScreen() {
           <ActivityIndicator size="large" color={colors.accent} />
           <Text style={styles.centerTitle}>Contacting Paystack…</Text>
           <Text style={styles.bigAmount}>{formatNaira(kobo)}</Text>
-          <FormNotice>Demo checkout — no real money is charged.</FormNotice>
+          {db.settings.demoMode ? (
+            <FormNotice>Demo checkout — no real money is charged.</FormNotice>
+          ) : null}
         </View>
       </Screen>
     );
@@ -87,7 +91,9 @@ export default function DepositScreen() {
 
   return (
     <Screen title="Deposit" back>
-      <FormNotice>Demo mode — Paystack is simulated. No real money is charged.</FormNotice>
+      {db.settings.demoMode ? (
+        <FormNotice>Demo mode — Paystack is simulated. No real money is charged.</FormNotice>
+      ) : null}
 
       <View style={styles.form}>
         <TextField

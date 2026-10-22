@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { AdminShell } from '@/components/AdminGate';
+import { ErrorText } from '@/components/fields';
 import { Card, EmptyState, SectionHeader, Segmented, SmallButton } from '@/components/kit';
 import { reviewGiftCard, reviewListing, reviewSubmission } from '@/lib/api';
 import { useDb } from '@/lib/db';
@@ -11,9 +12,19 @@ import { colors, typography } from '@/theme';
 
 type Segment = 'tasks' | 'giftcards' | 'listings';
 
+type Reviewed = {
+  id: string;
+  title: string;
+  subtitle: string;
+  at: number;
+  amountKobo?: number;
+};
+
 export default function AdminApprovalsScreen() {
   const db = useDb();
   const [segment, setSegment] = useState<Segment>('tasks');
+  const [error, setError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const pendingSubmissions = db.submissions
     .filter((submission) => submission.status === 'pending')
@@ -24,6 +35,47 @@ export default function AdminApprovalsScreen() {
   const pendingListings = db.listings
     .filter((listing) => listing.status === 'pending')
     .sort((a, b) => b.createdAt - a.createdAt);
+
+  /** Runs a review and shows what went wrong instead of doing nothing. */
+  const run = async (id: string, action: () => Promise<{ ok: boolean; error?: string }>) => {
+    setError(null);
+    setBusyId(id);
+    const result = await action();
+    setBusyId(null);
+    if (!result.ok) setError(result.error ?? 'That did not work. Try again.');
+  };
+
+  const history: Reviewed[] = [
+    ...db.submissions
+      .filter((item) => item.status !== 'pending')
+      .map((item) => ({
+        id: item.id,
+        title: `${item.taskTitle} · ${item.status}`,
+        subtitle: item.userName,
+        at: item.reviewedAt ?? item.createdAt,
+        amountKobo: item.status === 'approved' ? item.rewardKobo : undefined,
+      })),
+    ...db.giftCards
+      .filter((item) => item.status !== 'pending')
+      .map((item) => ({
+        id: item.id,
+        title: `${item.brandName} card · ${item.status}`,
+        subtitle: item.userName,
+        at: item.reviewedAt ?? item.createdAt,
+        amountKobo: item.status === 'approved' ? item.payoutKobo : undefined,
+      })),
+    ...db.listings
+      .filter((item) => item.status !== 'pending')
+      .map((item) => ({
+        id: item.id,
+        title: `${item.title} · ${item.status}`,
+        subtitle: item.sellerName,
+        at: item.soldAt ?? item.createdAt,
+        amountKobo: item.status === 'sold' ? item.priceKobo : undefined,
+      })),
+  ]
+    .sort((a, b) => b.at - a.at)
+    .slice(0, 15);
 
   return (
     <AdminShell title="Approvals">
@@ -36,6 +88,8 @@ export default function AdminApprovalsScreen() {
         value={segment}
         onChange={setSegment}
       />
+
+      {error ? <ErrorText>{error}</ErrorText> : null}
 
       {segment === 'tasks' ? (
         <View style={styles.section}>
@@ -54,15 +108,17 @@ export default function AdminApprovalsScreen() {
                   <SmallButton
                     label="Approve"
                     variant="accent"
-                    onPress={() => {
-                      void reviewSubmission(submission.id, true);
-                    }}
+                    disabled={busyId === submission.id}
+                    onPress={() =>
+                      void run(submission.id, () => reviewSubmission(submission.id, true))
+                    }
                   />
                   <SmallButton
                     label="Reject"
-                    onPress={() => {
-                      void reviewSubmission(submission.id, false);
-                    }}
+                    disabled={busyId === submission.id}
+                    onPress={() =>
+                      void run(submission.id, () => reviewSubmission(submission.id, false))
+                    }
                   />
                 </View>
               </Card>
@@ -95,15 +151,13 @@ export default function AdminApprovalsScreen() {
                   <SmallButton
                     label="Approve"
                     variant="accent"
-                    onPress={() => {
-                      void reviewGiftCard(card.id, true);
-                    }}
+                    disabled={busyId === card.id}
+                    onPress={() => void run(card.id, () => reviewGiftCard(card.id, true))}
                   />
                   <SmallButton
                     label="Reject"
-                    onPress={() => {
-                      void reviewGiftCard(card.id, false);
-                    }}
+                    disabled={busyId === card.id}
+                    onPress={() => void run(card.id, () => reviewGiftCard(card.id, false))}
                   />
                 </View>
               </Card>
@@ -131,15 +185,13 @@ export default function AdminApprovalsScreen() {
                   <SmallButton
                     label="Approve"
                     variant="accent"
-                    onPress={() => {
-                      void reviewListing(listing.id, true);
-                    }}
+                    disabled={busyId === listing.id}
+                    onPress={() => void run(listing.id, () => reviewListing(listing.id, true))}
                   />
                   <SmallButton
                     label="Reject"
-                    onPress={() => {
-                      void reviewListing(listing.id, false);
-                    }}
+                    disabled={busyId === listing.id}
+                    onPress={() => void run(listing.id, () => reviewListing(listing.id, false))}
                   />
                 </View>
               </Card>
@@ -150,10 +202,26 @@ export default function AdminApprovalsScreen() {
         </View>
       ) : null}
 
-      <SectionHeader title="History" />
-      <Text style={styles.historyHint}>
-        Reviewed items leave this queue. Full orders are under Orders.
-      </Text>
+      <SectionHeader title="Reviewed" />
+      {history.length ? (
+        <View style={styles.section}>
+          {history.map((item) => (
+            <View key={item.id} style={styles.historyRow}>
+              <View style={styles.flex1}>
+                <Text style={styles.historyTitle}>{item.title}</Text>
+                <Text style={styles.historySub}>
+                  {item.subtitle} · {formatDate(item.at)}
+                </Text>
+              </View>
+              {item.amountKobo ? (
+                <Text style={styles.reward}>{formatNaira(item.amountKobo)}</Text>
+              ) : null}
+            </View>
+          ))}
+        </View>
+      ) : (
+        <Text style={styles.historyHint}>Nothing reviewed yet.</Text>
+      )}
     </AdminShell>
   );
 }
@@ -169,4 +237,15 @@ const styles = StyleSheet.create({
   code: { ...typography.caption, color: colors.textSecondary, fontFamily: 'monospace' },
   buttons: { flexDirection: 'row', gap: 10, marginTop: 6 },
   historyHint: { ...typography.caption, color: colors.textSecondary, lineHeight: 17 },
+  historyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 12,
+  },
+  historyTitle: { ...typography.body, color: colors.text },
+  historySub: { ...typography.caption, color: colors.textSecondary },
+  flex1: { flex: 1 },
 });

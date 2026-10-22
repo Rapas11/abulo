@@ -71,6 +71,36 @@ function DataGate() {
   return null;
 }
 
+/**
+ * A static host cannot serve `/numbers/order/<id>` on a cold load, so the 404
+ * page stores the path and boots the app at its root. This hands the original
+ * path back to the router once there is a signed-in person to show it to.
+ */
+function DeepLinkGate() {
+  const { ready, user, locked } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!ready || !user || locked || !user.hasPin) return;
+
+    let stored: string | null = null;
+    try {
+      stored = sessionStorage.getItem('abulo:deep-link');
+      if (stored) sessionStorage.removeItem('abulo:deep-link');
+    } catch {
+      return;
+    }
+    if (!stored) return;
+
+    // "/abulo/app/numbers/order/x" → "/numbers/order/x"
+    const baseIndex = stored.indexOf('/app');
+    const path = baseIndex >= 0 ? stored.slice(baseIndex + 4) : stored;
+    if (path.startsWith('/')) router.replace(path as Href);
+  }, [ready, user, locked, router]);
+
+  return null;
+}
+
 export default function RootLayout() {
   return (
     <AuthProvider>
@@ -79,6 +109,7 @@ export default function RootLayout() {
           <StatusBar style="light" />
           <AuthGate />
           <DataGate />
+          <DeepLinkGate />
           <Stack
             screenOptions={{
               headerShown: false,

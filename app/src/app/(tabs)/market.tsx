@@ -136,7 +136,11 @@ export default function MarketScreen() {
 
       {segment === 'sell' ? (
         <View style={styles.section}>
-          <FormNotice>Demo mode — listings go live automatically after about 25 seconds.</FormNotice>
+          {db.settings.demoMode ? (
+            <FormNotice>Demo mode — listings go live automatically after about 25 seconds.</FormNotice>
+          ) : (
+            <FormNotice>Listings are reviewed by our team before they go live.</FormNotice>
+          )}
           <View style={styles.form}>
             <Text style={styles.fieldLabel}>Platform</Text>
             <View style={styles.platforms}>
@@ -191,7 +195,11 @@ export default function MarketScreen() {
       {segment === 'mine' ? (
         <View style={styles.section}>
           {posted ? (
-            <FormNotice>Listing posted. It is in review now — auto-approved in demo.</FormNotice>
+            <FormNotice>
+              {db.settings.demoMode
+                ? 'Listing posted. It is in review now — auto-approved in demo.'
+                : 'Listing posted. It goes live once it is approved.'}
+            </FormNotice>
           ) : null}
           {myListings.length ? (
             <View style={styles.list}>

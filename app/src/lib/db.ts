@@ -7,6 +7,7 @@
  */
 import { useSyncExternalStore } from 'react';
 
+import { COUNTRIES, GIFT_BRANDS, SERVICES, type Country, type GiftBrand, type Service } from './catalog';
 import { getSupabase } from './supabase';
 
 export type LedgerKind =
@@ -111,12 +112,30 @@ export type Settings = {
   numbersMarkupPct: number;
   accountFeePct: number;
   withdrawalFeeKobo: number;
+  /** True while the provider-dependent flows are still simulated. */
+  demoMode: boolean;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
   numbersMarkupPct: 40,
   accountFeePct: 7,
   withdrawalFeeKobo: 5000,
+  demoMode: true,
+};
+
+export type NotificationKind = 'number' | 'task' | 'giftcard' | 'account' | 'wallet';
+
+export type AppNotification = {
+  id: string;
+  userId: string;
+  kind: NotificationKind;
+  title: string;
+  body: string;
+  /** In-app route to open when the notification is tapped. */
+  link: string;
+  amountKobo?: number;
+  read: boolean;
+  createdAt: number;
 };
 
 export type Db = {
@@ -126,13 +145,29 @@ export type Db = {
   submissions: Submission[];
   giftCards: GiftCardOrder[];
   listings: AccountListing[];
+  notifications: AppNotification[];
   settings: Settings;
+  /** Authoritative balance from the server (sum of every ledger row). */
+  balanceKobo: number | null;
+  /** Catalog as it is in Postgres — the single source of truth for prices. */
+  countries: Country[];
+  services: Service[];
+  giftBrands: GiftBrand[];
+  loading: boolean;
+  /** Set when the last refresh failed — the UI shows this instead of ₦0. */
+  loadError: string | null;
 };
 
 export function balanceOf(db: Db, userId: string): number {
+  // The server sums every ledger row; the mirrored copy is only the newest page.
+  if (db.balanceKobo !== null) return db.balanceKobo;
   return db.ledger
     .filter((entry) => entry.userId === userId && entry.status === 'completed')
     .reduce((sum, entry) => sum + entry.amountKobo, 0);
+}
+
+export function unreadCount(db: Db): number {
+  return db.notifications.filter((item) => !item.read).length;
 }
 
 export function ledgerFor(db: Db, userId: string): LedgerEntry[] {
@@ -148,7 +183,14 @@ const emptyDb = (): Db => ({
   submissions: [],
   giftCards: [],
   listings: [],
+  notifications: [],
   settings: { ...DEFAULT_SETTINGS },
+  balanceKobo: null,
+  countries: COUNTRIES,
+  services: SERVICES,
+  giftBrands: GIFT_BRANDS,
+  loading: false,
+  loadError: null,
 });
 
 let state: Db = emptyDb();
@@ -295,7 +337,62 @@ function mapListing(row: Row): AccountListing {
     soldAt: row.sold_at ? toTime(row.sold_at) : undefined,
   };
 }
+
+function mapNotification(row: Row): AppNotification {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    kind: row.kind as NotificationKind,
+    title: row.title,
+    body: row.body ?? '',
+    link: row.link ?? '',
+    amountKobo: row.amount_kobo === null || row.amount_kobo === undefined ? undefined : toNumber(row.amount_kobo),
+    read: Boolean(row.read_at),
+    createdAt: toTime(row.created_at),
+  };
+}
+
+function mapCountry(row: Row): Country {
+  return {
+    code: row.code,
+    name: row.name,
+    dial: row.dial,
+    flag: row.flag,
+    mult: toNumber(row.mult, 1),
+  };
+}
+
+function mapService(row: Row): Service {
+  return {
+    id: row.id,
+    name: row.name,
+    icon: row.icon as Service['icon'],
+    baseKobo: toNumber(row.base_kobo),
+  };
+}
+
+function mapGiftBrand(row: Row): GiftBrand {
+  return {
+    id: row.id,
+    name: row.name,
+    icon: row.icon as GiftBrand['icon'],
+    rateNgn: toNumber(row.rate_ngn),
+  };
+}
 /* eslint-enable @typescript-eslint/no-explicit-any */
+
+/** True when Postgres says the table or function is not there yet. */
+function isMissingObject(error: { message?: string } | null): boolean {
+  const text = error?.message?.toLowerCase() ?? '';
+  return (
+    text.includes('does not exist') ||
+    text.includes('could not find the table') ||
+    text.includes('could not find the function') ||
+    text.includes('schema cache') ||
+    text.includes('pgrst205') ||
+    text.includes('pgrst202')
+  );
+}
 
 /**
  * Pulls a fresh copy of everything the signed-in user is allowed to see.
@@ -306,13 +403,29 @@ export async function loadDb(): Promise<void> {
   const seq = ++loadSeq;
   const supabase = getSupabase();
 
+  // Mark the mirror busy so screens show a loading state instead of ₦0.
+  if (state.loadError === null) setLoading(true);
+
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData.session?.user) {
     if (seq === loadSeq) writeDb(emptyDb());
     return;
   }
 
-  const [ledger, orders, tasks, submissions, cards, listings, settings] = await Promise.all([
+  const [
+    ledger,
+    orders,
+    tasks,
+    submissions,
+    cards,
+    listings,
+    settings,
+    notifications,
+    countries,
+    services,
+    brands,
+    balance,
+  ] = await Promise.all([
     supabase.from('ledger_entries').select('*').order('created_at', { ascending: false }).limit(300),
     supabase.from('number_orders').select('*').order('created_at', { ascending: false }).limit(200),
     supabase.from('tasks').select('*').order('created_at', { ascending: false }),
@@ -320,11 +433,22 @@ export async function loadDb(): Promise<void> {
     supabase.from('gift_cards').select('*').order('created_at', { ascending: false }).limit(200),
     supabase.from('listings').select('*').order('created_at', { ascending: false }).limit(300),
     supabase.from('settings').select('*').eq('id', true).maybeSingle(),
+    supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(100),
+    supabase.from('number_countries').select('*'),
+    supabase.from('number_services').select('*'),
+    supabase.from('gift_card_brands').select('*'),
+    supabase.rpc('wallet_balance'),
   ]);
 
   if (seq !== loadSeq) return;
 
   const settingsRow = settings.data as Row | null;
+  const previous = getDb();
+
+  // A failed read must not look like an empty wallet.
+  const failed = [ledger.error, orders.error, tasks.error, submissions.error, cards.error, listings.error].find(
+    (error) => error && !isMissingObject(error),
+  );
 
   writeDb({
     ledger: ((ledger.data ?? []) as Row[]).map(mapLedger),
@@ -333,12 +457,37 @@ export async function loadDb(): Promise<void> {
     submissions: ((submissions.data ?? []) as Row[]).map(mapSubmission),
     giftCards: ((cards.data ?? []) as Row[]).map(mapGiftCard),
     listings: ((listings.data ?? []) as Row[]).map(mapListing),
+    notifications:
+      notifications.error && isMissingObject(notifications.error)
+        ? previous.notifications
+        : ((notifications.data ?? []) as Row[]).map(mapNotification),
     settings: settingsRow
       ? {
           numbersMarkupPct: toNumber(settingsRow.numbers_markup_pct, 40),
           accountFeePct: toNumber(settingsRow.account_fee_pct, 7),
           withdrawalFeeKobo: toNumber(settingsRow.withdrawal_fee_kobo, 5000),
+          demoMode: settingsRow.demo_mode === null || settingsRow.demo_mode === undefined
+            ? true
+            : Boolean(settingsRow.demo_mode),
         }
       : { ...DEFAULT_SETTINGS },
+    balanceKobo: balance.error ? previous.balanceKobo : toNumber(balance.data),
+    countries: countries.error || !countries.data?.length
+      ? previous.countries
+      : ((countries.data ?? []) as Row[]).map(mapCountry),
+    services: services.error || !services.data?.length
+      ? previous.services
+      : ((services.data ?? []) as Row[]).map(mapService),
+    giftBrands: brands.error || !brands.data?.length
+      ? previous.giftBrands
+      : ((brands.data ?? []) as Row[]).map(mapGiftBrand),
+    loading: false,
+    loadError: failed ? failed.message : null,
   });
+}
+
+/** Marks the mirror as busy while a refresh runs (pull to refresh). */
+export function setLoading(loading: boolean): void {
+  state = { ...state, loading };
+  emit();
 }

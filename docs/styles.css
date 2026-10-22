@@ -117,6 +117,12 @@ img {
   color: var(--text);
 }
 
+.header-actions {
+  display: flex;
+  gap: 10px;
+  margin-left: auto;
+}
+
 /* ---------- buttons ---------- */
 
 .btn {
@@ -175,14 +181,23 @@ img {
 /* ---------- hero ---------- */
 
 .hero {
-  padding: 72px 0 48px;
+  padding: 88px 0 56px;
 }
 
-.hero .wrap {
-  display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 56px;
-  align-items: center;
+.hero-center {
+  max-width: 780px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.hero-center .lede {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-center .hero-actions,
+.hero-center .meta {
+  justify-content: center;
 }
 
 .eyebrow {
@@ -251,82 +266,6 @@ h1 em {
 
 .meta svg {
   opacity: 0.8;
-}
-
-/* phone */
-
-.phone-stage {
-  position: relative;
-  display: flex;
-  justify-content: center;
-}
-
-.phone-stage::before {
-  content: "";
-  position: absolute;
-  inset: 6% 4%;
-  background: radial-gradient(closest-side, rgba(255, 122, 0, 0.32), transparent 72%);
-  filter: blur(28px);
-  z-index: 0;
-}
-
-.phone {
-  position: relative;
-  z-index: 1;
-  width: min(320px, 82vw);
-  padding: 10px;
-  border-radius: 42px;
-  background: linear-gradient(160deg, #3a3a3c, #17171a 55%);
-  box-shadow:
-    0 30px 70px rgba(0, 0, 0, 0.65),
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-
-.phone img {
-  border-radius: 34px;
-  width: 100%;
-  height: auto;
-}
-
-.phone::after {
-  content: "";
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 86px;
-  height: 20px;
-  border-radius: 12px;
-  background: #0b0b0c;
-  z-index: 2;
-}
-
-/* ---------- strip ---------- */
-
-.strip {
-  border-top: 1px solid var(--line-soft);
-  border-bottom: 1px solid var(--line-soft);
-  background: rgba(255, 255, 255, 0.015);
-}
-
-.strip .wrap {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  padding-top: 26px;
-  padding-bottom: 26px;
-}
-
-.stat strong {
-  display: block;
-  font-size: 20px;
-  letter-spacing: -0.02em;
-}
-
-.stat span {
-  color: var(--muted-2);
-  font-size: 13px;
 }
 
 /* ---------- sections ---------- */
@@ -465,61 +404,6 @@ h2 {
   font-size: 14.5px;
 }
 
-/* ---------- download ---------- */
-
-.download {
-  padding-bottom: 96px;
-}
-
-.dl-grid {
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 16px;
-}
-
-.dl-card {
-  padding: 30px;
-  border-radius: 22px;
-  border: 1px solid var(--line);
-  background: linear-gradient(180deg, var(--raised), var(--surface));
-}
-
-.dl-card.accent {
-  background:
-    radial-gradient(420px 220px at 100% 0%, rgba(255, 122, 0, 0.2), transparent 70%),
-    linear-gradient(180deg, #26221d, #1b1a19);
-  border-color: rgba(255, 122, 0, 0.32);
-}
-
-.dl-card h3 {
-  margin: 0 0 6px;
-  font-size: 20px;
-  letter-spacing: -0.02em;
-}
-
-.dl-card p {
-  margin: 0 0 22px;
-  color: var(--muted);
-  font-size: 14.5px;
-}
-
-.file-facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.chip {
-  font-family: var(--mono);
-  font-size: 11.5px;
-  color: var(--muted);
-  padding: 5px 9px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--line);
-}
-
 /* ---------- note ---------- */
 
 .note {
@@ -563,18 +447,9 @@ h2 {
 /* ---------- responsive ---------- */
 
 @media (max-width: 960px) {
-  .hero .wrap {
-    grid-template-columns: 1fr;
-    gap: 44px;
-  }
-
   .grid,
   .steps {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .dl-grid {
-    grid-template-columns: 1fr;
   }
 
   .nav {
@@ -592,12 +467,11 @@ h2 {
   }
 
   .hero {
-    padding: 44px 0 32px;
+    padding: 48px 0 36px;
   }
 
   .grid,
-  .steps,
-  .strip .wrap {
+  .steps {
     grid-template-columns: 1fr;
   }
 
@@ -605,21 +479,21 @@ h2 {
     padding: 62px 0;
   }
 
-  .phone {
-    width: min(280px, 78vw);
-  }
-
   .btn {
     width: 100%;
   }
 
-  .hero-actions .btn,
-  .dl-card .btn {
+  .hero-actions .btn {
     width: 100%;
   }
 
   .site-header .btn {
     width: auto;
+  }
+
+  /* On a phone the primary action is "Log in" — keep the header to one button. */
+  .header-actions .btn-ghost {
+    display: none;
   }
 }
 

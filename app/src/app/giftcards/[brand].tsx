@@ -3,12 +3,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
+import { useConfirm } from '@/components/ConfirmSheet';
 import { Screen } from '@/components/Screen';
 import { ErrorText, FormNotice, TextField } from '@/components/fields';
 import { Card, Chip, EmptyState, InfoRow, MainButton } from '@/components/kit';
-import { pollGiftCard, sellGiftCard } from '@/lib/api';
+import { pollGiftCard, quoteGiftCardPayout, sellGiftCard } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
-import { GIFT_BRANDS } from '@/lib/catalog';
 import { useDb } from '@/lib/db';
 import { formatNaira } from '@/lib/money';
 import { colors, typography } from '@/theme';
@@ -17,10 +17,11 @@ const QUICK_VALUES = ['10', '25', '50', '100', '200'];
 
 export default function GiftCardScreen() {
   const router = useRouter();
+  const confirm = useConfirm();
   const { user } = useAuth();
   const db = useDb();
   const params = useLocalSearchParams<{ brand?: string }>();
-  const brand = GIFT_BRANDS.find((item) => item.id === params.brand);
+  const brand = db.giftBrands.find((item) => item.id === params.brand);
 
   const [value, setValue] = useState('25');
   const [code, setCode] = useState('');
@@ -28,8 +29,23 @@ export default function GiftCardScreen() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [quoted, setQuoted] = useState<number | null>(null);
 
   const order = orderId ? db.giftCards.find((card) => card.id === orderId) : undefined;
+  const usd = Number(value || '0');
+
+  // The server owns the payout rate.
+  useEffect(() => {
+    if (!brand || !Number.isFinite(usd) || usd <= 0) return;
+    let cancelled = false;
+    void (async () => {
+      const result = await quoteGiftCardPayout(brand.id, usd);
+      if (!cancelled) setQuoted(result);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [brand?.id, usd]);
 
   useEffect(() => {
     if (!order || order.status !== 'pending') return;
@@ -47,8 +63,7 @@ export default function GiftCardScreen() {
     );
   }
 
-  const usd = Number(value || '0');
-  const payout = Math.round(usd * brand.rateNgn * 100);
+  const payout = quoted ?? Math.round(usd * brand.rateNgn * 100);
 
   const submit = async () => {
     if (!user || busy) return;
@@ -61,6 +76,20 @@ export default function GiftCardScreen() {
       setError('Enter the full card code.');
       return;
     }
+
+    const approved = await confirm({
+      title: `Sell your ${brand.name} card`,
+      amountKobo: payout,
+      rows: [
+        { label: 'Card value', value: `$${usd}` },
+        { label: 'Rate', value: `${formatNaira(brand.rateNgn * 100)} / $1` },
+        { label: 'You receive', value: formatNaira(payout) },
+      ],
+      note: 'The payout is credited after the card is verified.',
+      confirmLabel: 'Submit card',
+    });
+    if (!approved) return;
+
     setBusy(true);
     const result = await sellGiftCard(brand.id, usd, code, pin);
     setBusy(false);
@@ -80,7 +109,9 @@ export default function GiftCardScreen() {
               <ActivityIndicator size="large" color={colors.accent} />
               <Text style={styles.centerTitle}>Checking your card…</Text>
               <Text style={styles.centerCaption}>
-                Demo mode auto-approves after about 20 seconds. Keep this screen open.
+                {db.settings.demoMode
+                  ? 'Demo mode auto-approves after about 20 seconds. Keep this screen open.'
+                  : 'We are checking the card. Keep this screen open.'}
               </Text>
             </>
           ) : null}
@@ -114,7 +145,11 @@ export default function GiftCardScreen() {
 
   return (
     <Screen title={brand.name} back>
-      <FormNotice>Demo mode — cards are auto-approved after about 20 seconds.</FormNotice>
+      {db.settings.demoMode ? (
+        <FormNotice>Demo mode — cards are auto-approved after about 20 seconds.</FormNotice>
+      ) : (
+        <FormNotice>Cards are checked by our team before the payout is released.</FormNotice>
+      )}
 
       <View style={styles.hero}>
         <View style={styles.iconWrap}>

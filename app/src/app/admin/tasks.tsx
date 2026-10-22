@@ -42,7 +42,10 @@ export default function AdminTasksScreen() {
 
   return (
     <AdminShell title="Tasks">
-      <FormNotice>Tasks are posted by the admin only at launch.</FormNotice>
+      <FormNotice>
+        Only admins post tasks. The reward is held when a task is posted and released when the
+        proof is approved.
+      </FormNotice>
 
       <View style={styles.form}>
         <TextField label="Title" value={title} onChangeText={setTitle} placeholder="e.g. Follow us on TikTok" />
@@ -95,7 +98,12 @@ export default function AdminTasksScreen() {
             <SmallButton
               label={task.status === 'open' ? 'Close' : 'Reopen'}
               onPress={() => {
-                void setTaskStatus(task.id, task.status === 'open' ? 'closed' : 'open');
+                setError(null);
+                void setTaskStatus(task.id, task.status === 'open' ? 'closed' : 'open').then(
+                  (result) => {
+                    if (!result.ok) setError(result.error);
+                  },
+                );
               }}
             />
           </View>

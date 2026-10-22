@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useContentMaxWidth } from '@/lib/layout';
 import { colors, layout, typography } from '@/theme';
 
 type Props = {
@@ -12,11 +13,15 @@ type Props = {
   back?: boolean;
   children: ReactNode;
   scroll?: boolean;
+  /** Enables pull-to-refresh. */
+  onRefresh?: () => void;
+  refreshing?: boolean;
 };
 
 /** Standard screen wrapper: dark background, 16 dp side padding, safe area. */
-export function Screen({ title, back = false, children, scroll = true }: Props) {
+export function Screen({ title, back = false, children, scroll = true, onRefresh, refreshing }: Props) {
   const router = useRouter();
+  const contentMaxWidth = useContentMaxWidth();
 
   const goBack = () => {
     if (router.canGoBack()) router.back();
@@ -43,9 +48,20 @@ export function Screen({ title, back = false, children, scroll = true }: Props) 
     <SafeAreaView style={styles.safe} edges={['top']}>
       {scroll ? (
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { maxWidth: contentMaxWidth }]}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            onRefresh ? (
+              <RefreshControl
+                refreshing={Boolean(refreshing)}
+                onRefresh={onRefresh}
+                tintColor={colors.accent}
+                colors={[colors.accent]}
+                progressBackgroundColor={colors.surface}
+              />
+            ) : undefined
+          }>
           {content}
         </ScrollView>
       ) : (
@@ -63,7 +79,6 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 32,
     width: '100%',
-    maxWidth: layout.contentMaxWidth,
     alignSelf: 'center',
   },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 8, marginBottom: 16 },

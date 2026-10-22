@@ -148,9 +148,16 @@ export const backend: AuthBackend = {
     }
 
     await AsyncStorage.setItem(PENDING_EMAIL_KEY, cleanEmail);
+
+    // In demo mode this returns a code the app can show instead of sending an
+    // email. With real email on, it returns nothing and Supabase sends a link.
+    const { data: signupCode } = await supabase.rpc('request_signup_code', {
+      p_email: cleanEmail,
+    });
+
     return {
       ok: true,
-      data: { user: await mapUser(data.user), demoCode: '' },
+      data: { user: await mapUser(data.user), demoCode: signupCode ? String(signupCode) : '' },
     };
   },
 
@@ -164,6 +171,16 @@ export const backend: AuthBackend = {
       (await supabase.auth.getUser()).data.user?.email ??
       '';
     if (!email) return { ok: false, error: 'Request a new code.' };
+
+    const { error: confirmError } = await supabase.rpc('confirm_signup', {
+      p_email: email,
+      p_code: cleanCode,
+    });
+    if (!confirmError) {
+      await AsyncStorage.removeItem(PENDING_EMAIL_KEY);
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) return { ok: true, data: await mapUser(userData.user) };
+    }
 
     const { data, error } = await supabase.auth.verifyOtp({
       email,
@@ -184,7 +201,9 @@ export const backend: AuthBackend = {
 
     const { error } = await supabase.auth.resend({ type: 'signup', email });
     if (error) return { ok: false, error: friendlyAuthError(error.message) };
-    return { ok: true, data: { demoCode: '' } };
+
+    const { data: code } = await supabase.rpc('request_signup_code', { p_email: email });
+    return { ok: true, data: { demoCode: code ? String(code) : '' } };
   },
 
   async signIn(email, password) {
@@ -209,6 +228,17 @@ export const backend: AuthBackend = {
     if (!cleanEmail) return { ok: false, error: 'Enter your email address.' };
 
     const supabase = getSupabase();
+
+    // Our own code flow works without SMTP and shows the code on screen while
+    // demo mode is on. Supabase's email link is the production path.
+    const { data: code, error: codeError } = await supabase.rpc('request_reset_code', {
+      p_email: cleanEmail,
+    });
+    if (!codeError) {
+      const demoCode = String(code ?? '');
+      if (demoCode) return { ok: true, data: { demoCode } };
+    }
+
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail);
     if (error) return { ok: false, error: friendlyAuthError(error.message) };
     return { ok: true, data: { demoCode: '' } };
@@ -218,19 +248,30 @@ export const backend: AuthBackend = {
     if (newPassword.length < 8) {
       return { ok: false, error: 'Password must be at least 8 characters.' };
     }
+    const cleanEmail = email.trim().toLowerCase();
     const supabase = getSupabase();
 
+    const { error: codeError } = await supabase.rpc('reset_password_with_code', {
+      p_email: cleanEmail,
+      p_code: code.trim(),
+      p_new_password: newPassword,
+    });
+    if (!codeError) {
+      // Make the person sign in again with the new password.
+      await supabase.auth.signOut();
+      return { ok: true, data: true };
+    }
+
     const { error: verifyError } = await supabase.auth.verifyOtp({
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       token: code.trim(),
       type: 'recovery',
     });
-    if (verifyError) return { ok: false, error: friendlyAuthError(verifyError.message) };
+    if (verifyError) return { ok: false, error: friendlyAuthError(codeError.message) };
 
     const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
     if (updateError) return { ok: false, error: friendlyAuthError(updateError.message) };
 
-    // Make the person sign in again with the new password.
     await supabase.auth.signOut();
     return { ok: true, data: true };
   },

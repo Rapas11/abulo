@@ -1,12 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Screen } from '@/components/Screen';
 import { EmptyState, SectionHeader, Segmented, StatusPill } from '@/components/kit';
 import { useAuth } from '@/lib/auth-context';
-import { GIFT_BRANDS } from '@/lib/catalog';
 import { useDb } from '@/lib/db';
 import { formatDate } from '@/lib/format';
 import { formatNaira } from '@/lib/money';
@@ -26,7 +25,15 @@ export default function EarnScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const db = useDb();
-  const [segment, setSegment] = useState<Segment>('tasks');
+  const params = useLocalSearchParams<{ tab?: string }>();
+  const [segment, setSegment] = useState<Segment>(
+    params.tab === 'giftcards' ? 'giftcards' : params.tab === 'tasks' ? 'tasks' : 'tasks',
+  );
+
+  // Deep links like /earn?tab=giftcards pick the tab.
+  useEffect(() => {
+    if (params.tab === 'giftcards' || params.tab === 'tasks') setSegment(params.tab);
+  }, [params.tab]);
 
   const tasks = db.tasks.filter((task) => task.status === 'open');
   const mySubmissions = user
@@ -109,7 +116,7 @@ export default function EarnScreen() {
         <View style={styles.section}>
           <SectionHeader title="Sell a gift card" />
           <View style={styles.grid}>
-            {GIFT_BRANDS.map((brand) => (
+            {db.giftBrands.map((brand) => (
               <Pressable
                 key={brand.id}
                 onPress={() =>

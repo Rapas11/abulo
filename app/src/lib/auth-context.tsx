@@ -17,6 +17,8 @@ type AuthContextValue = {
   user: AbuloUser | null;
   /** True when the user has a PIN and has not unlocked this run of the app. */
   locked: boolean;
+  /** Locks the app behind the PIN until the user unlocks it. */
+  lock(): void;
   /** Fake email code from the last signup / reset (demo mode only). */
   demoCode: string | null;
   signUp(name: string, email: string, password: string): Promise<AuthResult<SignUpData>>;
@@ -40,13 +42,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [locked, setLocked] = useState(false);
   const [demoCode, setDemoCode] = useState<string | null>(null);
 
+  const lock = useCallback(() => setLocked(true), []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const restored = await backend.restoreSession();
       if (cancelled) return;
       setUser(restored);
-      setLocked(Boolean(restored?.hasPin));
+      // The PIN is not asked for on every launch — it is only used to confirm
+      // money moves (and to lock the app on request).
+      setLocked(false);
       setReady(true);
     })();
     return () => {
@@ -80,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const result = await backend.signIn(email, password);
     if (result.ok) {
       setUser(result.data);
-      setLocked(result.data.hasPin);
+      setLocked(false);
       setDemoCode(null);
     }
     return result;
@@ -143,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ready,
         user,
         locked,
+        lock,
         demoCode,
         signUp,
         verifyEmail,
